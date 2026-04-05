@@ -1,0 +1,334 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Manrope:wght@400;600;700&display=swap');
+
+:root {
+  --bg-left: #f4f6fb;
+  --bg-right-a: #115bd4;
+  --bg-right-b: #25a9f8;
+  --ink: #111425;
+  --ink-soft: #5f6783;
+  --line: #dce2ef;
+  --card: #ffffff;
+  --primary: #1673ea;
+  --primary-dark: #0f56b5;
+  --success: #1f7a1f;
+  --error: #b00020;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background: linear-gradient(135deg, #eef3fb 0%, #f8fbff 100%);
+}
+
+.login-scene,
+.scene {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-shell {
+  width: min(1080px, 94vw);
+  min-height: min(680px, 92vh);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(18, 60, 126, 0.18);
+  background: var(--card);
+  display: grid;
+  grid-template-columns: 1.08fr 1fr;
+}
+
+.login-form-side {
+  background: var(--bg-left);
+  padding: clamp(28px, 4vw, 46px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.kicker {
+  margin: 0;
+  color: #4f5f8a;
+  letter-spacing: 0.1em;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.title {
+  margin: 10px 0 6px;
+  font-family: 'Outfit', 'Manrope', sans-serif;
+  font-size: clamp(2rem, 3.5vw, 2.6rem);
+  line-height: 1;
+}
+
+.subtitle {
+  margin: 0 0 22px;
+  color: var(--ink-soft);
+  max-width: 40ch;
+}
+
+.stack-form {
+  display: grid;
+  gap: 10px;
+  max-width: 380px;
+}
+
+.field-label {
+  font-size: 0.82rem;
+  color: #5f6783;
+  font-weight: 700;
+}
+
+.input {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  border-color: #4f9dff;
+  box-shadow: 0 0 0 3px rgba(79, 157, 255, 0.2);
+}
+
+.btn {
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.14s ease, background 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn--wide {
+  width: 100%;
+}
+
+.btn--primary {
+  background: linear-gradient(120deg, var(--primary), #3d95ff);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: linear-gradient(120deg, var(--primary-dark), var(--primary));
+}
+
+.btn--ghost {
+  border-color: #b4c0d9;
+  background: #fff;
+  color: #243052;
+}
+
+.divider {
+  margin: 18px 0 12px;
+  text-align: center;
+  position: relative;
+}
+
+.divider span {
+  background: var(--bg-left);
+  padding: 0 8px;
+  color: #68739a;
+  font-size: 0.88rem;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px solid #d8deec;
+  z-index: -1;
+}
+
+.oauth-wrap {
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-visual-side {
+  position: relative;
+  padding: clamp(22px, 3vw, 34px);
+  background:
+    radial-gradient(circle at 80% 6%, rgba(255, 255, 255, 0.2) 0 14%, transparent 15%),
+    radial-gradient(circle at 28% 68%, rgba(255, 255, 255, 0.12) 0 16%, transparent 17%),
+    linear-gradient(150deg, var(--bg-right-b), var(--bg-right-a));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visual-card {
+  width: min(420px, 100%);
+  min-height: 480px;
+  border-radius: 26px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(6px);
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.visual-head {
+  margin: 0;
+  letter-spacing: 0.06em;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+.visual-card h2 {
+  margin: 0;
+  font-family: 'Outfit', 'Manrope', sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.08;
+}
+
+.visual-art {
+  margin-top: 16px;
+  position: relative;
+  min-height: 280px;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(0.2px);
+}
+
+.orb--one {
+  width: 130px;
+  height: 130px;
+  background: radial-gradient(circle at 35% 30%, #9ee1ff, #4ec4ff);
+  left: 16px;
+  top: 12px;
+  opacity: 0.9;
+}
+
+.orb--two {
+  width: 170px;
+  height: 170px;
+  background: radial-gradient(circle at 35% 30%, #6f8dff, #2f4fd4);
+  right: 10px;
+  bottom: 10px;
+  opacity: 0.8;
+}
+
+.person-silhouette {
+  position: absolute;
+  right: 28px;
+  bottom: 0;
+  width: 210px;
+  height: 240px;
+  border-radius: 110px 110px 16px 16px;
+  background:
+    radial-gradient(circle at 52% 22%, #ffd5bc 0 16%, transparent 17%),
+    radial-gradient(circle at 52% 21%, #3e2d2d 0 25%, transparent 26%),
+    linear-gradient(160deg, #89e4ff, #53c1ef 48%, #1f83c1);
+  box-shadow: 0 20px 26px rgba(8, 38, 90, 0.3);
+}
+
+.spark {
+  position: absolute;
+  left: 22px;
+  bottom: 58px;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #1f6eff;
+  background: #fff;
+  font-size: 1.25rem;
+  box-shadow: 0 10px 28px rgba(22, 52, 118, 0.35);
+}
+
+.panel {
+  width: min(720px, 94vw);
+  background: #fff;
+  border: 1px solid #d8deec;
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(34, 63, 118, 0.12);
+}
+
+.panel--content {
+  padding: 24px;
+}
+
+.panel__title {
+  margin: 0;
+  font-family: 'Outfit', 'Manrope', sans-serif;
+}
+
+.panel__subtitle {
+  margin: 18px 0 10px;
+  font-family: 'Outfit', 'Manrope', sans-serif;
+  font-size: 1.2rem;
+}
+
+.actions-row {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  border-radius: 999px;
+}
+
+.msg {
+  font-weight: 700;
+}
+
+.msg--success {
+  color: var(--success);
+}
+
+.msg--error {
+  color: var(--error);
+}
+
+.muted {
+  color: #68739a;
+}
+
+@media (max-width: 960px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .login-visual-side {
+    min-height: 280px;
+  }
+
+  .visual-card {
+    min-height: auto;
+  }
+
+  .visual-art {
+    min-height: 180px;
+  }
+
+  .person-silhouette {
+    width: 155px;
+    height: 180px;
+  }
+}
