@@ -1,8 +1,12 @@
 package com.paf.googleauth.controller;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.paf.googleauth.dto.AdminLoginRequest;
+import com.paf.googleauth.dto.AdminLoginResponse;
+import com.paf.googleauth.dto.ChangeAdminPasswordRequest;
 import com.paf.googleauth.dto.GoogleLoginRequest;
 import com.paf.googleauth.dto.GoogleLoginResponse;
+import com.paf.googleauth.service.AdminAuthService;
 import com.paf.googleauth.service.GoogleTokenService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +27,7 @@ import java.util.Map;
 @Validated
 public class AuthController {
 
+    private final AdminAuthService adminAuthService;
     private final GoogleTokenService googleTokenService;
 
     @GetMapping("/health")
@@ -44,5 +49,16 @@ public class AuthController {
         String picture = payload.get("picture") instanceof String p ? p : "";
 
         return new GoogleLoginResponse(name, email, picture, true);
+    }
+
+    @PostMapping("/auth/admin/login")
+    public AdminLoginResponse adminLogin(@Valid @RequestBody AdminLoginRequest request) {
+        return adminAuthService.login(request.email(), request.password());
+    }
+
+    @PostMapping("/admin/profile/password")
+    public Map<String, String> changeAdminPassword(@Valid @RequestBody ChangeAdminPasswordRequest request) {
+        adminAuthService.changePassword(request.email(), request.currentPassword(), request.newPassword());
+        return Map.of("message", "Admin password updated successfully");
     }
 }
