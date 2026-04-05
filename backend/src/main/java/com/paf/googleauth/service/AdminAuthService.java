@@ -29,7 +29,8 @@ public class AdminAuthService {
 
     public synchronized void changePassword(String email, String currentPassword, String newPassword) {
         if (!adminEmail.equalsIgnoreCase(email)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the configured admin account can change password");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the configured admin account can change password");
         }
 
         if (!adminPassword.equals(currentPassword)) {
@@ -37,7 +38,8 @@ public class AdminAuthService {
         }
 
         if (newPassword.equals(currentPassword)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different from current password");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "New password must be different from current password");
         }
 
         adminPassword = newPassword;
