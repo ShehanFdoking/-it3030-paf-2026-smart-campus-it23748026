@@ -46,6 +46,10 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
   const editable = useMemo(() => bookings.find((item) => item.id === editingId) || null, [bookings, editingId]);
 
   const startEdit = (booking) => {
+    if (booking.status !== 'PENDING' || booking.systemGenerated) {
+      setError('Only pending bookings can be edited');
+      return;
+    }
     setEditingId(booking.id);
     setForm(createBookingEditForm(booking));
     setMessage('');
@@ -162,7 +166,7 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
                   </td>
                   <td>
                     <div className="table-actions">
-                      {!booking.systemGenerated ? (
+                      {!booking.systemGenerated && booking.status === 'PENDING' ? (
                         <button type="button" className="btn btn--ghost btn--compact btn--edit" onClick={() => startEdit(booking)}>Edit</button>
                       ) : null}
                       {!booking.systemGenerated ? (

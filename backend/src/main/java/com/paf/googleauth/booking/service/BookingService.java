@@ -98,7 +98,6 @@ public class BookingService {
 
         if (hasApprovedConflict(booking.getResourceId(), request.bookingDate(), request.startTime(), request.endTime(),
                 booking.getId())) {
-            ResourceCatalogItem resource = getBookableResource(booking.getResourceId(), booking.getResourceCategory());
             return conflictResult(resource, request.expectedAttendees(),
                     getUnavailableMessage(booking.getResourceCategory()));
         }
