@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { listResources } from '../api';
 import {
   DAY_SCOPE_OPTIONS,
+  EQUIPMENT_TYPE_OPTIONS,
   LOCATION_OPTIONS,
   RESOURCE_CATEGORIES,
   createEmptyResourceDraft,
   createEmptyWindow,
   getCategoryMeta,
   getSublocationOptions,
+  formatSublocationLabel,
 } from './resourceConfig';
 
 const STATUS_OPTIONS = [
@@ -26,7 +28,7 @@ function normalizeAvailabilityWindows(windows) {
 export default function ResourceForm({ categorySlug, resource, busy, onCancel, onSubmit }) {
   const meta = getCategoryMeta(categorySlug);
   const [draft, setDraft] = useState(() => createEmptyResourceDraft(categorySlug));
-  const [referenceOptions, setReferenceOptions] = useState([]);
+  const [referenceItems, setReferenceItems] = useState([]);
 
   useEffect(() => {
     if (resource) {
@@ -38,6 +40,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
         sublocation: resource.sublocation || '',
         status: resource.status || 'ACTIVE',
         relatedResourceName: resource.relatedResourceName || '',
+        equipmentType: resource.equipmentType || (resource ? '' : createEmptyResourceDraft(categorySlug).equipmentType || ''),
         availabilityWindows: resource.availabilityWindows?.length
           ? resource.availabilityWindows.map((window) => ({
               dayScope: window.dayScope || 'WEEKDAYS',
@@ -54,7 +57,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
   useEffect(() => {
     const loadReferenceOptions = async () => {
       if (categorySlug !== RESOURCE_CATEGORIES.equipment.slug) {
-        setReferenceOptions([]);
+        setReferenceItems([]);
         return;
       }
 
@@ -67,18 +70,39 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
         const names = new Set();
         [...lectureHalls, ...meetingRooms].forEach((item) => {
           if (item.name) {
-            names.add(item.name);
+            names.add(JSON.stringify({
+              name: item.name,
+              categoryLabel: item.categoryLabel || item.category,
+              location: item.location,
+              sublocation: item.sublocation,
+            }));
           }
         });
 
-        setReferenceOptions(Array.from(names).sort((left, right) => left.localeCompare(right)));
+        setReferenceItems(
+          Array.from(names)
+            .map((entry) => JSON.parse(entry))
+            .sort((left, right) => left.name.localeCompare(right.name)),
+        );
       } catch {
-        setReferenceOptions([]);
+        setReferenceItems([]);
       }
     };
 
     loadReferenceOptions();
   }, [categorySlug]);
+
+  const filteredReferenceItems = referenceItems.filter((item) => (
+    item.location === draft.location && item.sublocation === draft.sublocation
+  ));
+
+  const selectedReferenceItem = referenceItems.find((item) => item.name === draft.relatedResourceName) || null;
+
+  const referenceOptions = filteredReferenceItems.some((item) => item.name === draft.relatedResourceName)
+    ? filteredReferenceItems
+    : selectedReferenceItem
+      ? [...filteredReferenceItems, selectedReferenceItem]
+      : filteredReferenceItems;
 
   useEffect(() => {
     const options = getSublocationOptions(draft.location);
@@ -89,6 +113,25 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
       }));
     }
   }, [draft.location, draft.sublocation]);
+
+  useEffect(() => {
+    if (categorySlug !== RESOURCE_CATEGORIES.equipment.slug) {
+      return;
+    }
+
+    const matchingReferenceExists = referenceItems.some((item) => (
+      item.name === draft.relatedResourceName
+      && item.location === draft.location
+      && item.sublocation === draft.sublocation
+    ));
+
+    if (draft.relatedResourceName && !matchingReferenceExists) {
+      setDraft((current) => ({
+        ...current,
+        relatedResourceName: '',
+      }));
+    }
+  }, [categorySlug, draft.location, draft.relatedResourceName, draft.sublocation, referenceItems]);
 
   const updateField = (field, value) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -126,6 +169,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
       ...draft,
       capacity: Number(draft.capacity),
       availabilityWindows: normalizeAvailabilityWindows(draft.availabilityWindows),
+      equipmentType: draft.equipmentType || '',
     });
   };
 
@@ -142,8 +186,25 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
         <span className="resource-chip">Type: {meta.label}</span>
       </div>
 
-      <div className="resource-grid">
-        <label className="resource-field">
+      <div className={`resource-grid${categorySlug === RESOURCE_CATEGORIES.equipment.slug ? ' resource-grid--equipment' : ''}`}>
+        {categorySlug === RESOURCE_CATEGORIES.equipment.slug ? (
+          <label className="resource-field resource-field--half">
+            <span>Equipment type</span>
+            <select
+              className="input"
+              value={draft.equipmentType || ''}
+              onChange={(event) => updateField('equipmentType', event.target.value)}
+              required
+            >
+              <option value="">Select equipment type</option>
+              {EQUIPMENT_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+
+        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Name</span>
           <input
             className="input"
@@ -154,7 +215,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           />
         </label>
 
-        <label className="resource-field">
+        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Capacity</span>
           <input
             className="input"
@@ -167,7 +228,9 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           />
         </label>
 
-        <label className="resource-field">
+        {categorySlug === RESOURCE_CATEGORIES.equipment.slug ? <div className="resource-grid__spacer" aria-hidden="true" /> : null}
+
+        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Location</span>
           <select
             className="input"
@@ -180,7 +243,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           </select>
         </label>
 
-        <label className="resource-field">
+        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Sublocation</span>
           <select
             className="input"
@@ -193,7 +256,29 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           </select>
         </label>
 
-        <label className="resource-field">
+        {categorySlug === RESOURCE_CATEGORIES.equipment.slug ? (
+          <label className="resource-field resource-field--half">
+            <span>Lecture hall / meeting room name</span>
+            <select
+              className="input"
+              value={draft.relatedResourceName || ''}
+              onChange={(event) => updateField('relatedResourceName', event.target.value)}
+              required
+            >
+              <option value="">Select a lecture hall or meeting room</option>
+              {referenceOptions.map((option) => (
+                <option key={`${option.name}-${option.location}-${option.sublocation}`} value={option.name}>
+                    {option.name} - {option.categoryLabel} ({option.location} / {formatSublocationLabel(option.sublocation)})
+                </option>
+              ))}
+            </select>
+            <p className="resource-field__hint">
+              Suggestions are filtered to match the selected location and sublocation.
+            </p>
+          </label>
+        ) : null}
+
+        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Status</span>
           <select
             className="input"
@@ -205,25 +290,6 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
             ))}
           </select>
         </label>
-
-        {categorySlug === RESOURCE_CATEGORIES.equipment.slug ? (
-          <label className="resource-field resource-field--full">
-            <span>Lecture hall / meeting room name</span>
-            <input
-              className="input"
-              list="reference-resource-options"
-              value={draft.relatedResourceName || ''}
-              onChange={(event) => updateField('relatedResourceName', event.target.value)}
-              placeholder="Select or type an existing lecture hall / meeting room name"
-              required
-            />
-            <datalist id="reference-resource-options">
-              {referenceOptions.map((option) => (
-                <option key={option} value={option} />
-              ))}
-            </datalist>
-          </label>
-        ) : null}
       </div>
 
       <div className="resource-windows">

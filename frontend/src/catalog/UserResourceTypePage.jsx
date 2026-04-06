@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listResources } from '../api';
-import { getCategoryMeta, getLocationLabel } from './resourceConfig';
+import { formatSublocationLabel, getCategoryMeta, getLocationLabel } from './resourceConfig';
 
 function uniqueSublocations(resources) {
   return ['ALL', ...new Set(resources.map((resource) => resource.sublocation))];
@@ -12,6 +12,7 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortMode, setSortMode] = useState('LOCATION');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [locationSublocationFilter, setLocationSublocationFilter] = useState({});
 
@@ -33,7 +34,7 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
   }, [meta.enumValue]);
 
   const visibleResources = useMemo(() => {
-    return resources.filter((resource) => {
+    const filtered = resources.filter((resource) => {
       const search = searchTerm.trim().toLowerCase();
       const searchMatch = !search
         || resource.name.toLowerCase().includes(search)
@@ -42,7 +43,25 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
       const statusMatch = statusFilter === 'ALL' || resource.status === statusFilter;
       return searchMatch && statusMatch;
     });
-  }, [resources, searchTerm, statusFilter]);
+
+    if (sortMode === 'NAME') {
+      return filtered.sort((left, right) => left.name.localeCompare(right.name));
+    }
+
+    return filtered.sort((left, right) => {
+      const locationDiff = getLocationLabel(left.location).localeCompare(getLocationLabel(right.location));
+      if (locationDiff !== 0) {
+        return locationDiff;
+      }
+
+      const sublocationDiff = formatSublocationLabel(left.sublocation).localeCompare(formatSublocationLabel(right.sublocation));
+      if (sublocationDiff !== 0) {
+        return sublocationDiff;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+  }, [resources, searchTerm, sortMode, statusFilter]);
 
   const groupedByLocation = useMemo(() => {
     return visibleResources.reduce((accumulator, resource) => {
@@ -60,6 +79,9 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
     const right = getLocationLabel(b[0]);
     return left.localeCompare(right);
   });
+
+  const totalResources = visibleResources.length;
+  const activeResources = visibleResources.filter((resource) => resource.status === 'ACTIVE').length;
 
   return (
     <main className="scene scene--user">
@@ -79,9 +101,25 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
           </div>
         </nav>
 
-        <h1 className="panel__title">{meta.label}</h1>
+        <section className="user-hero user-hero--compact">
+          <p className="user-hero__kicker">CATEGORY OVERVIEW</p>
+          <h1 className="panel__title">{meta.label}</h1>
+          <div className="user-hero__chips">
+            <span className="user-chip">Total: {totalResources}</span>
+            <span className="user-chip user-chip--ok">Active: {activeResources}</span>
+            <span className="user-chip">Locations: {locationEntries.length}</span>
+          </div>
+        </section>
 
         <div className="user-resource-filter-bar">
+          <select
+            className="input user-filter-control"
+            value={sortMode}
+            onChange={(event) => setSortMode(event.target.value)}
+          >
+            <option value="LOCATION">Sort: Location</option>
+            <option value="NAME">Sort: Name</option>
+          </select>
           <select
             className="input user-filter-control"
             value={statusFilter}
@@ -125,7 +163,7 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
                     }))}
                   >
                     {sublocationOptions.map((value) => (
-                      <option key={value} value={value}>{value === 'ALL' ? 'All' : value}</option>
+                        <option key={value} value={value}>{value === 'ALL' ? 'All' : formatSublocationLabel(value)}</option>
                     ))}
                   </select>
                 </div>
@@ -136,7 +174,7 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
                       <div className="user-resource-mini-card__code">{resource.name}</div>
                       <div className="user-resource-mini-card__meta">
                         <p>{getLocationLabel(resource.location)}</p>
-                        <p>{resource.sublocation}</p>
+                          <p>{formatSublocationLabel(resource.sublocation)}</p>
                         <p>Capacity: {resource.capacity}</p>
                       </div>
                     </article>

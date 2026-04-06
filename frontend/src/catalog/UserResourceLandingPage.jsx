@@ -25,8 +25,16 @@ export default function UserResourceLandingPage({ navigate, onBack, onLogout }) 
           </div>
         </nav>
 
-        <h1 className="panel__title">Resource Catalogue</h1>
-        <p className="subtitle">Choose a resource type to view all available resources.</p>
+        <section className="user-hero">
+          <p className="user-hero__kicker">RESOURCE DIRECTORY</p>
+          <h1 className="panel__title">Find Spaces and Equipment Fast</h1>
+          <p className="subtitle">Choose a category to explore available resources by location and floor.</p>
+          <div className="user-hero__chips">
+            <span className="user-chip">Live availability view</span>
+            <span className="user-chip">Location-based browsing</span>
+            <span className="user-chip">Quick status filtering</span>
+          </div>
+        </section>
 
         <div className="user-resource-grid">
           {RESOURCE_CATEGORY_LIST.map((category) => {
@@ -41,6 +49,7 @@ export default function UserResourceLandingPage({ navigate, onBack, onLogout }) 
                 <div className="user-resource-box__icon" style={{ background: visual?.color || 'var(--primary)' }}>
                   <span>{visual?.icon || '📦'}</span>
                 </div>
+                <span className="user-resource-box__badge">Open Category</span>
                 <h2>{category.label}</h2>
                 <p>Open {category.label.toLowerCase()} details</p>
               </button>

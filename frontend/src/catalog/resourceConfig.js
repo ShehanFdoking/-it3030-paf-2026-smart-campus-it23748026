@@ -40,6 +40,16 @@ export const DAY_SCOPE_OPTIONS = [
   { value: 'BOTH', label: 'Weekdays and Weekends' },
 ];
 
+export const EQUIPMENT_TYPE_OPTIONS = [
+  { value: 'PROJECTOR', label: 'Projector' },
+  { value: 'MICROPHONE', label: 'Microphone' },
+  { value: 'SPEAKER', label: 'Speaker' },
+  { value: 'LAPTOP', label: 'Laptop' },
+  { value: 'MONITOR', label: 'Monitor' },
+  { value: 'VISUALIZER', label: 'Visualizer' },
+  { value: 'OTHER', label: 'Other' },
+];
+
 const FLOOR_OPTIONS = (count) => Array.from({ length: count }, (_, index) => ({
   value: `${index + 1}${ordinalSuffix(index + 1)}`,
   label: `${index + 1}${ordinalSuffix(index + 1)} Floor`,
@@ -107,10 +117,40 @@ export function createEmptyResourceDraft(categorySlug) {
     sublocation: getDefaultSublocation(location),
     status: 'ACTIVE',
     relatedResourceName: '',
+    equipmentType: '',
     availabilityWindows: [createEmptyWindow()],
   };
 }
 
 export function formatWindow(window) {
   return `${window.dayScope} | ${window.openTime} - ${window.closeTime}`;
+}
+
+export function formatEquipmentType(value) {
+  if (!value) {
+    return 'Select equipment type';
+  }
+
+  const option = EQUIPMENT_TYPE_OPTIONS.find((entry) => entry.value === value);
+  return option?.label || value;
+}
+
+export function formatSublocationLabel(value) {
+  if (!value) {
+    return '-';
+  }
+
+  if (value === 'NEW_LIBRARY') {
+    return 'New Library';
+  }
+
+  if (/^\d+(st|nd|rd|th)$/.test(value)) {
+    return `${value} Floor`;
+  }
+
+  return value
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join(' ');
 }

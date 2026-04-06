@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class ResourceCatalogService {
@@ -25,12 +27,24 @@ public class ResourceCatalogService {
         this.repository = repository;
     }
 
-    public List<ResourceCatalogResponse> list(ResourceCategory category) {
+    public List<ResourceCatalogResponse> list(ResourceCategory category, String sortBy) {
         List<ResourceCatalogItem> items = category == null
                 ? repository.findAll()
                 : repository.findAllByCategoryOrderByNameAsc(category);
 
+        if ("location".equalsIgnoreCase(sortBy)) {
+            Comparator<ResourceCatalogItem> byLocationThenSublocationThenName = Comparator
+                    .comparing((ResourceCatalogItem item) -> normalizeSortValue(item.getLocation()))
+                    .thenComparing(item -> normalizeSortValue(item.getSublocation()))
+                    .thenComparing(item -> normalizeSortValue(item.getName()));
+            items = items.stream().sorted(byLocationThenSublocationThenName).toList();
+        }
+
         return items.stream().map(this::toResponse).toList();
+    }
+
+    private String normalizeSortValue(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.ROOT);
     }
 
     public ResourceCatalogResponse getById(String id) {
@@ -73,6 +87,7 @@ public class ResourceCatalogService {
 
     private void applyRequest(ResourceCatalogItem item, ResourceCatalogRequest request) {
         validateRelatedResourceName(request);
+        validateEquipmentType(request);
         item.setCategory(request.category());
         item.setName(request.name().trim());
         item.setCapacity(request.capacity());
@@ -80,7 +95,20 @@ public class ResourceCatalogService {
         item.setSublocation(request.sublocation());
         item.setStatus(request.status() == null ? ResourceStatus.ACTIVE : request.status());
         item.setRelatedResourceName(normalizeRelatedResourceName(request));
+        item.setEquipmentType(normalizeEquipmentType(request));
         item.setAvailabilityWindows(toWindows(request.availabilityWindows()));
+    }
+
+    private void validateEquipmentType(ResourceCatalogRequest request) {
+        String equipmentType = normalizeEquipmentType(request);
+        if (request.category() != ResourceCategory.EQUIPMENT) {
+            return;
+        }
+
+        if (equipmentType == null || equipmentType.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Equipment type is required for equipment resources");
+        }
     }
 
     private void validateRelatedResourceName(ResourceCatalogRequest request) {
@@ -102,10 +130,25 @@ public class ResourceCatalogService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Referenced lecture hall or meeting room does not exist");
         }
+
+        boolean matchesLocation = repository.existsByNameIgnoreCaseAndCategoryInAndLocationAndSublocation(
+                relatedResourceName,
+                List.of(ResourceCategory.LECTURE_HALL, ResourceCategory.MEETING_ROOM),
+                request.location(),
+                request.sublocation());
+
+        if (!matchesLocation) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Referenced lecture hall or meeting room must match the selected location and sublocation");
+        }
     }
 
     private String normalizeRelatedResourceName(ResourceCatalogRequest request) {
         return request.relatedResourceName() == null ? null : request.relatedResourceName().trim();
+    }
+
+    private String normalizeEquipmentType(ResourceCatalogRequest request) {
+        return request.equipmentType() == null ? null : request.equipmentType().trim();
     }
 
     private List<AvailabilityWindow> toWindows(List<AvailabilityWindowRequest> availabilityWindows) {
@@ -140,6 +183,7 @@ public class ResourceCatalogService {
                 item.getSublocation(),
                 item.getStatus(),
                 item.getRelatedResourceName(),
+                item.getEquipmentType(),
                 windows);
     }
 }

@@ -29,8 +29,10 @@ public class ResourceCatalogController {
     }
 
     @GetMapping
-    public List<ResourceCatalogResponse> list(@RequestParam(required = false) ResourceCategory category) {
-        return service.list(category);
+    public List<ResourceCatalogResponse> list(
+            @RequestParam(required = false) ResourceCategory category,
+            @RequestParam(required = false) String sortBy) {
+        return service.list(category, sortBy);
     }
 
     @GetMapping("/{id}")

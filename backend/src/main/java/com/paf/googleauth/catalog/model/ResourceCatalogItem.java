@@ -34,6 +34,9 @@ public class ResourceCatalogItem {
     @Field("related_resource_name")
     private String relatedResourceName;
 
+    @Field("equipment_type")
+    private String equipmentType;
+
     @Field("availability_windows")
     private List<AvailabilityWindow> availabilityWindows = new ArrayList<>();
 
@@ -102,6 +105,14 @@ public class ResourceCatalogItem {
 
     public void setRelatedResourceName(String relatedResourceName) {
         this.relatedResourceName = relatedResourceName;
+    }
+
+    public String getEquipmentType() {
+        return equipmentType;
+    }
+
+    public void setEquipmentType(String equipmentType) {
+        this.equipmentType = equipmentType;
     }
 
     public List<AvailabilityWindow> getAvailabilityWindows() {

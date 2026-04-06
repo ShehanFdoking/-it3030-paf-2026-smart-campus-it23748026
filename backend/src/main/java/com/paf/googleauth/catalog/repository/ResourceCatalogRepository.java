@@ -18,4 +18,10 @@ public interface ResourceCatalogRepository extends MongoRepository<ResourceCatal
     Optional<ResourceCatalogItem> findByNameIgnoreCase(String name);
 
     boolean existsByNameIgnoreCaseAndCategoryIn(String name, List<ResourceCategory> categories);
+
+    boolean existsByNameIgnoreCaseAndCategoryInAndLocationAndSublocation(
+            String name,
+            List<ResourceCategory> categories,
+            String location,
+            String sublocation);
 }
