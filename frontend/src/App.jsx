@@ -2,6 +2,10 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { changeAdminPassword, loginAdmin, loginWithGoogle } from './api';
+import ResourceCategoryPage from './catalog/ResourceCategoryPage';
+import ResourceManagementPage from './catalog/ResourceManagementPage';
+import UserResourceLandingPage from './catalog/UserResourceLandingPage';
+import UserResourceTypePage from './catalog/UserResourceTypePage';
 import './App.css';
 
 export default function App() {
@@ -21,7 +25,20 @@ export default function App() {
   const [adminMessage, setAdminMessage] = useState('');
 
   function getRoute(pathname) {
-    const allowedRoutes = ['/', '/home', '/admin/dashboard', '/admin/profile'];
+    const allowedRoutes = [
+      '/',
+      '/home',
+      '/admin/dashboard',
+      '/admin/profile',
+      '/admin/resources',
+      '/admin/resources/lecture-halls',
+      '/admin/resources/meeting-rooms',
+      '/admin/resources/equipment',
+      '/resources',
+      '/resources/lecture-halls',
+      '/resources/meeting-rooms',
+      '/resources/equipment',
+    ];
     return allowedRoutes.includes(pathname) ? pathname : '/';
   }
 
@@ -117,6 +134,26 @@ export default function App() {
     return (
       <main className="scene">
         <section className="panel panel--content">
+          <nav className="site-nav" aria-label="Main navigation">
+            <div className="site-nav__brand">
+              <span className="site-nav__dot" aria-hidden="true" />
+              <div>
+                <p className="site-nav__kicker">Smart Campus</p>
+                <strong>Resource Portal</strong>
+              </div>
+            </div>
+            <div className="site-nav__links">
+              <button type="button" className="site-nav__link is-active" onClick={() => navigate('/home')}>
+                Home
+              </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/resources')}>
+                Resources
+              </button>
+              <button type="button" className="site-nav__link" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          </nav>
           <h1 className="panel__title">Home Page</h1>
           {!googleUser ? (
             <p>Login session is not available. Please go back and sign in again.</p>
@@ -128,20 +165,31 @@ export default function App() {
               {googleUser.picture ? <img src={googleUser.picture} alt="profile" width="72" height="72" className="avatar" /> : null}
             </>
           )}
-          <div className="actions-row">
-            <button type="button" onClick={handleLogout} className="btn btn--ghost">
-              Logout
-            </button>
-          </div>
         </section>
       </main>
     );
   }
 
+  if (route === '/resources') {
+    return <UserResourceLandingPage navigate={navigate} onBack={() => navigate('/home')} onLogout={handleLogout} />;
+  }
+
+  if (route === '/resources/lecture-halls') {
+    return <UserResourceTypePage categorySlug="lecture-halls" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
+  }
+
+  if (route === '/resources/meeting-rooms') {
+    return <UserResourceTypePage categorySlug="meeting-rooms" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
+  }
+
+  if (route === '/resources/equipment') {
+    return <UserResourceTypePage categorySlug="equipment" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
+  }
+
   if (route === '/admin/profile') {
     return (
-      <main className="scene">
-        <section className="panel panel--content">
+      <main className="scene scene--admin">
+        <section className="panel panel--content admin-panel">
           <h1 className="panel__title">Admin Profile</h1>
           {!adminUser ? (
             <p>Admin session not found. Please log in again.</p>
@@ -193,12 +241,15 @@ export default function App() {
 
   if (route === '/admin/dashboard') {
     return (
-      <main className="scene">
-        <section className="panel panel--content">
+      <main className="scene scene--admin">
+        <section className="panel panel--content admin-panel">
           <h1 className="panel__title">Admin Dashboard</h1>
           {!adminUser ? <p>Admin session not found. Please sign in again.</p> : <p>Welcome to the admin dashboard.</p>}
 
           <div className="actions-row">
+            <button type="button" onClick={() => navigate('/admin/resources')} className="btn btn--primary">
+              Resource Management
+            </button>
             <button type="button" onClick={() => navigate('/admin/profile')} className="btn btn--primary">
               Go to Profile
             </button>
@@ -209,6 +260,22 @@ export default function App() {
         </section>
       </main>
     );
+  }
+
+  if (route === '/admin/resources') {
+    return <ResourceManagementPage navigate={navigate} onBack={() => navigate('/admin/dashboard')} />;
+  }
+
+  if (route === '/admin/resources/lecture-halls') {
+    return <ResourceCategoryPage categorySlug="lecture-halls" navigate={navigate} onBack={() => navigate('/admin/resources')} />;
+  }
+
+  if (route === '/admin/resources/meeting-rooms') {
+    return <ResourceCategoryPage categorySlug="meeting-rooms" navigate={navigate} onBack={() => navigate('/admin/resources')} />;
+  }
+
+  if (route === '/admin/resources/equipment') {
+    return <ResourceCategoryPage categorySlug="equipment" navigate={navigate} onBack={() => navigate('/admin/resources')} />;
   }
 
   return (

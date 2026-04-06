@@ -44,3 +44,51 @@ export async function changeAdminPassword(email, currentPassword, newPassword) {
 
   return parseApiResponse(response);
 }
+
+export async function listResources(category) {
+  const url = new URL(`${API_BASE_URL}/api/admin/resources`);
+
+  if (category) {
+    url.searchParams.set('category', category);
+  }
+
+  const response = await fetch(url);
+  return parseApiResponse(response);
+}
+
+export async function getResource(id) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/resources/${id}`);
+  return parseApiResponse(response);
+}
+
+export async function createResource(payload) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/resources`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseApiResponse(response);
+}
+
+export async function updateResource(id, payload) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/resources/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseApiResponse(response);
+}
+
+export async function deleteResource(id) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/resources/${id}`, {
+    method: 'DELETE',
+  });
+
+  return parseApiResponse(response);
+}
