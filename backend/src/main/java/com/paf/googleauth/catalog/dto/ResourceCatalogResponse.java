@@ -15,6 +15,5 @@ public record ResourceCatalogResponse(
         String sublocation,
         ResourceStatus status,
         String relatedResourceName,
-        List<AvailabilityWindowResponse> availabilityWindows
-) {
+        List<AvailabilityWindowResponse> availabilityWindows) {
 }

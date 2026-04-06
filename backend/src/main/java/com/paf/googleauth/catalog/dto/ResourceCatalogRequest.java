@@ -17,9 +17,8 @@ public record ResourceCatalogRequest(
         @NotBlank String location,
         @NotBlank String sublocation,
         @NotNull ResourceStatus status,
-    String relatedResourceName,
-        @Valid List<AvailabilityWindowRequest> availabilityWindows
-) {
+        String relatedResourceName,
+        @Valid List<AvailabilityWindowRequest> availabilityWindows) {
     public ResourceCatalogRequest {
         availabilityWindows = availabilityWindows == null ? new ArrayList<>() : List.copyOf(availabilityWindows);
     }

@@ -96,8 +96,7 @@ public class ResourceCatalogService {
 
         boolean exists = repository.existsByNameIgnoreCaseAndCategoryIn(
                 relatedResourceName,
-                List.of(ResourceCategory.LECTURE_HALL, ResourceCategory.MEETING_ROOM)
-        );
+                List.of(ResourceCategory.LECTURE_HALL, ResourceCategory.MEETING_ROOM));
 
         if (!exists) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -141,7 +140,6 @@ public class ResourceCatalogService {
                 item.getSublocation(),
                 item.getStatus(),
                 item.getRelatedResourceName(),
-                windows
-        );
+                windows);
     }
 }

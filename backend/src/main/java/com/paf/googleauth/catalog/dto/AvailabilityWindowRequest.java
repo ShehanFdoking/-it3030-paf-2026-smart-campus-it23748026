@@ -5,6 +5,5 @@ import jakarta.validation.constraints.NotBlank;
 public record AvailabilityWindowRequest(
         @NotBlank String dayScope,
         @NotBlank String openTime,
-        @NotBlank String closeTime
-) {
+        @NotBlank String closeTime) {
 }
