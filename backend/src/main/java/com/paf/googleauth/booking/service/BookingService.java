@@ -43,7 +43,8 @@ public class BookingService {
         ResourceCatalogItem resource = getBookableResource(request.resourceId(), request.resourceCategory());
         validateExpectedAttendees(request.resourceCategory(), request.expectedAttendees(), resource.getCapacity());
 
-        if (hasApprovedConflict(resource.getId(), request.bookingDate(), request.startTime(), request.endTime(), null)) {
+        if (hasApprovedConflict(resource.getId(), request.bookingDate(), request.startTime(), request.endTime(),
+                null)) {
             return conflictResult(resource, request.expectedAttendees(),
                     getUnavailableMessage(request.resourceCategory()));
         }
@@ -52,8 +53,10 @@ public class BookingService {
         if (request.resourceCategory() == ResourceCategory.EQUIPMENT) {
             linkedResource = resolveLinkedResource(resource);
             String proofCode = normalize(request.linkedRoomApprovalCode());
-            boolean linkedRoomBooked = hasApprovedConflict(linkedResource.getId(), request.bookingDate(), request.startTime(), request.endTime(), null);
-            if (linkedRoomBooked && !hasMatchingApprovalCode(linkedResource.getId(), request.bookingDate(), request.startTime(), request.endTime(), proofCode)) {
+            boolean linkedRoomBooked = hasApprovedConflict(linkedResource.getId(), request.bookingDate(),
+                    request.startTime(), request.endTime(), null);
+            if (linkedRoomBooked && !hasMatchingApprovalCode(linkedResource.getId(), request.bookingDate(),
+                    request.startTime(), request.endTime(), proofCode)) {
                 return conflictResult(resource, request.expectedAttendees(),
                         "This equipment or linked room is already booked for the selected time.");
             }
@@ -67,7 +70,8 @@ public class BookingService {
             bookingRepository.save(linkedBooking);
         }
 
-        return new BookingRequestResult(true, "Booking request submitted. Current status: Pending.", toResponse(booking), List.of());
+        return new BookingRequestResult(true, "Booking request submitted. Current status: Pending.",
+                toResponse(booking), List.of());
     }
 
     public List<BookingResponse> listMyBookings(String requesterEmail) {
@@ -92,7 +96,8 @@ public class BookingService {
         ResourceCatalogItem resource = getBookableResource(booking.getResourceId(), booking.getResourceCategory());
         validateExpectedAttendees(booking.getResourceCategory(), request.expectedAttendees(), resource.getCapacity());
 
-        if (hasApprovedConflict(booking.getResourceId(), request.bookingDate(), request.startTime(), request.endTime(), booking.getId())) {
+        if (hasApprovedConflict(booking.getResourceId(), request.bookingDate(), request.startTime(), request.endTime(),
+                booking.getId())) {
             ResourceCatalogItem resource = getBookableResource(booking.getResourceId(), booking.getResourceCategory());
             return conflictResult(resource, request.expectedAttendees(),
                     getUnavailableMessage(booking.getResourceCategory()));
@@ -101,8 +106,10 @@ public class BookingService {
         if (booking.getResourceCategory() == ResourceCategory.EQUIPMENT) {
             ResourceCatalogItem linkedResource = resolveLinkedResource(resource);
             String proofCode = normalize(request.linkedRoomApprovalCode());
-            boolean linkedRoomBooked = hasApprovedConflict(linkedResource.getId(), request.bookingDate(), request.startTime(), request.endTime(), null);
-            if (linkedRoomBooked && !hasMatchingApprovalCode(linkedResource.getId(), request.bookingDate(), request.startTime(), request.endTime(), proofCode)) {
+            boolean linkedRoomBooked = hasApprovedConflict(linkedResource.getId(), request.bookingDate(),
+                    request.startTime(), request.endTime(), null);
+            if (linkedRoomBooked && !hasMatchingApprovalCode(linkedResource.getId(), request.bookingDate(),
+                    request.startTime(), request.endTime(), proofCode)) {
                 return conflictResult(resource, request.expectedAttendees(),
                         "This equipment or linked room is already booked for the selected time.");
             }
@@ -155,14 +162,17 @@ public class BookingService {
         List<BookingRecord> linkedBookings = bookingRepository.findAllByParentBookingId(booking.getId());
 
         if (request.status() == BookingStatus.APPROVED
-                && hasApprovedConflict(booking.getResourceId(), booking.getBookingDate(), booking.getStartTime(), booking.getEndTime(), booking.getId())) {
+                && hasApprovedConflict(booking.getResourceId(), booking.getBookingDate(), booking.getStartTime(),
+                        booking.getEndTime(), booking.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Resource is already booked for this time range");
         }
 
         for (BookingRecord linked : linkedBookings) {
             if (request.status() == BookingStatus.APPROVED
-                    && hasApprovedConflict(linked.getResourceId(), linked.getBookingDate(), linked.getStartTime(), linked.getEndTime(), linked.getId())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Linked room is already booked for this time range");
+                    && hasApprovedConflict(linked.getResourceId(), linked.getBookingDate(), linked.getStartTime(),
+                            linked.getEndTime(), linked.getId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Linked room is already booked for this time range");
             }
         }
 
@@ -215,14 +225,14 @@ public class BookingService {
         }
 
         String text = String.join(" ",
-                        safe(record.getResourceName()),
-                        safe(record.getRequesterEmail()),
-                        safe(record.getRequesterName()),
-                        safe(record.getResourceLocation()),
-                        safe(record.getResourceSublocation()),
-                        safe(record.getPurpose()),
-                        safe(record.getApprovalCode()),
-                        record.getStatus() == null ? "" : record.getStatus().name())
+                safe(record.getResourceName()),
+                safe(record.getRequesterEmail()),
+                safe(record.getRequesterName()),
+                safe(record.getResourceLocation()),
+                safe(record.getResourceSublocation()),
+                safe(record.getPurpose()),
+                safe(record.getApprovalCode()),
+                record.getStatus() == null ? "" : record.getStatus().name())
                 .toLowerCase(Locale.ROOT);
 
         return text.contains(query.toLowerCase(Locale.ROOT));
@@ -253,7 +263,8 @@ public class BookingService {
         return record;
     }
 
-    private BookingRecord buildLinkedRoomBooking(ResourceCatalogItem linkedResource, BookingRequest request, String parentBookingId) {
+    private BookingRecord buildLinkedRoomBooking(ResourceCatalogItem linkedResource, BookingRequest request,
+            String parentBookingId) {
         BookingRecord linked = new BookingRecord();
         linked.setResourceId(linkedResource.getId());
         linked.setResourceCategory(linkedResource.getCategory());
@@ -301,7 +312,8 @@ public class BookingService {
 
         if (linked.getCategory() != ResourceCategory.LECTURE_HALL
                 && linked.getCategory() != ResourceCategory.MEETING_ROOM) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Linked room must be a lecture hall or meeting room");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Linked room must be a lecture hall or meeting room");
         }
 
         if (linked.getStatus() != ResourceStatus.ACTIVE) {
@@ -321,7 +333,8 @@ public class BookingService {
         return "This equipment is already booked for the selected time.";
     }
 
-    private void validateExpectedAttendees(ResourceCategory category, Integer expectedAttendees, Integer resourceCapacity) {
+    private void validateExpectedAttendees(ResourceCategory category, Integer expectedAttendees,
+            Integer resourceCapacity) {
         if (category == ResourceCategory.LECTURE_HALL || category == ResourceCategory.MEETING_ROOM) {
             if (expectedAttendees == null || expectedAttendees < 1) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected attendees is required");
@@ -329,14 +342,16 @@ public class BookingService {
         }
 
         if (category == ResourceCategory.MEETING_ROOM && expectedAttendees != null && expectedAttendees <= 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Meeting room expected attendees should be more than 5");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Meeting room expected attendees should be more than 5");
         }
 
         if (category != ResourceCategory.EQUIPMENT
                 && expectedAttendees != null
                 && resourceCapacity != null
                 && expectedAttendees > resourceCapacity) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected attendees cannot exceed resource capacity");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Expected attendees cannot exceed resource capacity");
         }
     }
 
@@ -357,7 +372,8 @@ public class BookingService {
         }
     }
 
-    private boolean hasApprovedConflict(String resourceId, String date, String startTime, String endTime, String excludeBookingId) {
+    private boolean hasApprovedConflict(String resourceId, String date, String startTime, String endTime,
+            String excludeBookingId) {
         List<BookingRecord> approved = bookingRepository.findAllByResourceIdAndBookingDateAndStatus(
                 resourceId,
                 date,
@@ -379,7 +395,8 @@ public class BookingService {
         return false;
     }
 
-    private boolean hasMatchingApprovalCode(String resourceId, String date, String startTime, String endTime, String approvalCode) {
+    private boolean hasMatchingApprovalCode(String resourceId, String date, String startTime, String endTime,
+            String approvalCode) {
         if (approvalCode == null || approvalCode.isBlank()) {
             return false;
         }
@@ -400,12 +417,14 @@ public class BookingService {
         });
     }
 
-    private BookingRequestResult conflictResult(ResourceCatalogItem selectedResource, Integer expectedAttendees, String message) {
+    private BookingRequestResult conflictResult(ResourceCatalogItem selectedResource, Integer expectedAttendees,
+            String message) {
         List<BookingSuggestionResponse> suggestions = suggestAlternatives(selectedResource, expectedAttendees);
         return new BookingRequestResult(false, message, null, suggestions);
     }
 
-    private List<BookingSuggestionResponse> suggestAlternatives(ResourceCatalogItem selectedResource, Integer expectedAttendees) {
+    private List<BookingSuggestionResponse> suggestAlternatives(ResourceCatalogItem selectedResource,
+            Integer expectedAttendees) {
         int requiredCapacity = expectedAttendees == null ? 1 : expectedAttendees;
 
         return resourceCatalogRepository.findAllByCategoryOrderByNameAsc(selectedResource.getCategory()).stream()

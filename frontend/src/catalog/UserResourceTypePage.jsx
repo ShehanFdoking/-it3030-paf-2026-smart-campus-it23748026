@@ -83,6 +83,10 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
   const totalResources = visibleResources.length;
   const activeResources = visibleResources.filter((resource) => resource.status === 'ACTIVE').length;
 
+  const openBookingPage = (resourceId) => {
+    navigate(`/resources/${categorySlug}/${resourceId}/book`);
+  };
+
   return (
     <main className="scene scene--user">
       <section className="panel panel--content user-resource-detail">
@@ -170,20 +174,25 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
 
                 <div className="user-resource-card-grid">
                   {resourcesForSection.map((resource) => (
-                    <article key={resource.id} className="user-resource-mini-card">
+                    <article
+                      key={resource.id}
+                      className="user-resource-mini-card"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openBookingPage(resource.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openBookingPage(resource.id);
+                        }
+                      }}
+                    >
                       <div className="user-resource-mini-card__code">{resource.name}</div>
                       <div className="user-resource-mini-card__meta">
                         <p>{getLocationLabel(resource.location)}</p>
                         <p>{formatSublocationLabel(resource.sublocation)}</p>
                         <p>Capacity: {resource.capacity}</p>
-                        <button
-                          type="button"
-                          className="btn btn--primary btn--compact"
-                          disabled={resource.status !== 'ACTIVE'}
-                          onClick={() => navigate(`/resources/${categorySlug}/${resource.id}/book`)}
-                        >
-                          {resource.status === 'ACTIVE' ? 'Book' : 'Unavailable'}
-                        </button>
+                        <p>Status: {resource.status === 'ACTIVE' ? 'Active' : 'Out of service'}</p>
                       </div>
                     </article>
                   ))}

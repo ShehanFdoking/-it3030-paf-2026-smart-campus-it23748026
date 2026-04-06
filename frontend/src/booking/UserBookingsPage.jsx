@@ -181,19 +181,19 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
             <h3>Edit booking</h3>
             <div className="resource-grid">
               <label className="resource-field">
-                <span>Date</span>
+                <span>Date<span className="required-mark">*</span></span>
                 <input className="input" type="date" min={minDate} value={form.bookingDate} onChange={(event) => setForm((c) => ({ ...c, bookingDate: event.target.value }))} required />
               </label>
               <label className="resource-field">
-                <span>Purpose</span>
+                <span>Purpose<span className="required-mark">*</span></span>
                 <input className="input" value={form.purpose} onChange={(event) => setForm((c) => ({ ...c, purpose: event.target.value }))} required />
               </label>
               <label className="resource-field">
-                <span>Start</span>
+                <span>Start<span className="required-mark">*</span></span>
                 <input className="input" type="time" value={form.startTime} onChange={(event) => setForm((c) => ({ ...c, startTime: event.target.value }))} required />
               </label>
               <label className="resource-field">
-                <span>End</span>
+                <span>End<span className="required-mark">*</span></span>
                 <input className="input" type="time" value={form.endTime} onChange={(event) => setForm((c) => ({ ...c, endTime: event.target.value }))} required />
               </label>
               <label className="resource-field">

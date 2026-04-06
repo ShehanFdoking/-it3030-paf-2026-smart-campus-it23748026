@@ -189,7 +189,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
       <div className={`resource-grid${categorySlug === RESOURCE_CATEGORIES.equipment.slug ? ' resource-grid--equipment' : ''}`}>
         {categorySlug === RESOURCE_CATEGORIES.equipment.slug ? (
           <label className="resource-field resource-field--half">
-            <span>Equipment type</span>
+            <span>Equipment type<span className="required-mark">*</span></span>
             <select
               className="input"
               value={draft.equipmentType || ''}
@@ -205,7 +205,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
         ) : null}
 
         <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
-          <span>Name</span>
+          <span>Name<span className="required-mark">*</span></span>
           <input
             className="input"
             value={draft.name}
@@ -216,7 +216,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
         </label>
 
         <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
-          <span>Capacity</span>
+          <span>Capacity<span className="required-mark">*</span></span>
           <input
             className="input"
             type="number"
@@ -258,7 +258,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
 
         {categorySlug === RESOURCE_CATEGORIES.equipment.slug ? (
           <label className="resource-field resource-field--half">
-            <span>Lecture hall / meeting room name</span>
+            <span>Lecture hall / meeting room name<span className="required-mark">*</span></span>
             <select
               className="input"
               value={draft.relatedResourceName || ''}

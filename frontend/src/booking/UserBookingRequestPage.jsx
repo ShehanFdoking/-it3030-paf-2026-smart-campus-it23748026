@@ -129,23 +129,26 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
         <form className="resource-form" onSubmit={handleSubmit}>
           <div className="resource-grid">
             <label className="resource-field">
-              <span>Date</span>
+              <span>Date<span className="required-mark">*</span></span>
               <input className="input" type="date" min={minDate} value={form.bookingDate} onChange={(event) => updateField('bookingDate', event.target.value)} required />
             </label>
             <label className="resource-field">
-              <span>Purpose</span>
+              <span>Purpose<span className="required-mark">*</span></span>
               <input className="input" value={form.purpose} onChange={(event) => updateField('purpose', event.target.value)} required placeholder="Exam, workshop, seminar" />
             </label>
             <label className="resource-field">
-              <span>Start time</span>
+              <span>Start time<span className="required-mark">*</span></span>
               <input className="input" type="time" value={form.startTime} onChange={(event) => updateField('startTime', event.target.value)} required />
             </label>
             <label className="resource-field">
-              <span>End time</span>
+              <span>End time<span className="required-mark">*</span></span>
               <input className="input" type="time" value={form.endTime} onChange={(event) => updateField('endTime', event.target.value)} required />
             </label>
             <label className="resource-field">
-              <span>Expected attendees</span>
+              <span>
+                Expected attendees
+                {meta.enumValue === 'LECTURE_HALL' || meta.enumValue === 'MEETING_ROOM' ? <span className="required-mark">*</span> : null}
+              </span>
               <input
                 className="input"
                 type="number"

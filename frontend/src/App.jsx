@@ -229,7 +229,9 @@ export default function App() {
 
               <h2 className="panel__subtitle">Change Password</h2>
               <form onSubmit={handleAdminPasswordChange} className="stack-form">
+                <label className="field-label" htmlFor="current-admin-password">Current Password<span className="required-mark">*</span></label>
                 <input
+                  id="current-admin-password"
                   type="password"
                   placeholder="Current password"
                   value={passwordForm.currentPassword}
@@ -237,7 +239,9 @@ export default function App() {
                   required
                   className="input"
                 />
+                <label className="field-label" htmlFor="new-admin-password">New Password<span className="required-mark">*</span></label>
                 <input
+                  id="new-admin-password"
                   type="password"
                   placeholder="New password"
                   value={passwordForm.newPassword}
@@ -324,7 +328,7 @@ export default function App() {
           <p className="subtitle">Access your account using admin credentials or Google.</p>
 
           <form onSubmit={handleAdminLogin} className="stack-form" autoComplete="off">
-            <label className="field-label" htmlFor="admin-email">Username</label>
+            <label className="field-label" htmlFor="admin-email">Username<span className="required-mark">*</span></label>
             <input
               id="admin-email"
               name="admin-username"
@@ -337,7 +341,7 @@ export default function App() {
               spellCheck={false}
               className="input"
             />
-            <label className="field-label" htmlFor="admin-password">Password</label>
+            <label className="field-label" htmlFor="admin-password">Password<span className="required-mark">*</span></label>
             <input
               id="admin-password"
               name="admin-password"

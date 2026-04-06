@@ -18,7 +18,8 @@ public interface BookingRepository extends MongoRepository<BookingRecord, String
 
     List<BookingRecord> findAllByResourceCategoryOrderByCreatedAtDesc(ResourceCategory category);
 
-    List<BookingRecord> findAllByResourceIdAndBookingDateAndStatus(String resourceId, String bookingDate, BookingStatus status);
+    List<BookingRecord> findAllByResourceIdAndBookingDateAndStatus(String resourceId, String bookingDate,
+            BookingStatus status);
 
     List<BookingRecord> findAllByParentBookingId(String parentBookingId);
 }

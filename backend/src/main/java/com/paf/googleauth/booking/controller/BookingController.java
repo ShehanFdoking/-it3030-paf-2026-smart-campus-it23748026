@@ -66,7 +66,8 @@ public class BookingController {
     }
 
     @PatchMapping("/admin/bookings/{id}/status")
-    public BookingResponse updateStatus(@PathVariable String id, @Valid @RequestBody BookingStatusUpdateRequest request) {
+    public BookingResponse updateStatus(@PathVariable String id,
+            @Valid @RequestBody BookingStatusUpdateRequest request) {
         return bookingService.updateBookingStatus(id, request);
     }
 }
