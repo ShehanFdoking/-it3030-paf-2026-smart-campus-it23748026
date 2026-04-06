@@ -163,10 +163,10 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
                   <td>
                     <div className="table-actions">
                       {!booking.systemGenerated ? (
-                        <button type="button" className="btn btn--ghost btn--compact" onClick={() => startEdit(booking)}>Edit</button>
+                        <button type="button" className="btn btn--ghost btn--compact btn--edit" onClick={() => startEdit(booking)}>Edit</button>
                       ) : null}
                       {!booking.systemGenerated ? (
-                        <button type="button" className="btn btn--ghost btn--compact" onClick={() => removeBooking(booking.id)}>Delete</button>
+                        <button type="button" className="btn btn--ghost btn--compact btn--delete" onClick={() => removeBooking(booking.id)}>Delete</button>
                       ) : <span className="muted">Auto-linked</span>}
                     </div>
                   </td>

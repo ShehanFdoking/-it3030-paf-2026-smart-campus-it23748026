@@ -885,6 +885,33 @@ body {
   border-radius: 10px;
 }
 
+.btn--edit {
+  border-color: #8db4ff;
+  background: #edf4ff;
+  color: #16418e;
+}
+
+.btn--edit:hover {
+  border-color: #5f92ef;
+  background: #dfeeff;
+}
+
+.btn--delete {
+  border-color: #f0a9b5;
+  background: #fff0f3;
+  color: #b32643;
+}
+
+.btn--delete:hover {
+  border-color: #de7e90;
+  background: #ffe3e8;
+}
+
+.btn--delete:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
 .resource-table-wrap {
   margin-top: 10px;
   overflow-x: auto;

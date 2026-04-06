@@ -47,12 +47,12 @@ export default function ResourceTable({ resources, onEdit, onDelete, busy, categ
               </td>
               <td>
                 <div className="table-actions">
-                  <button type="button" className="btn btn--ghost btn--compact" onClick={() => onEdit(resource)}>
+                  <button type="button" className="btn btn--ghost btn--compact btn--edit" onClick={() => onEdit(resource)}>
                     Edit
                   </button>
                   <button
                     type="button"
-                    className="btn btn--ghost btn--compact"
+                    className="btn btn--ghost btn--compact btn--delete"
                     onClick={() => onDelete(resource)}
                     disabled={busy}
                   >
