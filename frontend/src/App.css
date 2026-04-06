@@ -646,6 +646,51 @@ body {
   color: #1e355f;
 }
 
+.user-booking-card,
+.user-suggestion-box,
+.admin-booking-group {
+  border: 1px solid #d7e3fb;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 14px;
+}
+
+.user-booking-card {
+  margin-bottom: 14px;
+}
+
+.user-booking-card p {
+  margin: 4px 0;
+}
+
+.user-suggestion-box {
+  margin-top: 12px;
+}
+
+.user-suggestion-box h3 {
+  margin: 0 0 10px;
+}
+
+.user-suggestion-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-booking-group {
+  margin-top: 12px;
+  border: 1px solid #cfe0ff;
+  background:
+    linear-gradient(170deg, rgba(255, 255, 255, 0.96), rgba(244, 249, 255, 0.95));
+  box-shadow: 0 10px 24px rgba(26, 76, 166, 0.08);
+}
+
+.admin-booking-group h3 {
+  margin: 0 0 10px;
+  color: #113a7b;
+  font-size: 1.06rem;
+  letter-spacing: 0.01em;
+}
+
 .resource-hub__top,
 .resource-page__header,
 .resource-form__header,
@@ -849,6 +894,10 @@ body {
   background: #ffffff;
 }
 
+.resource-table tbody tr:hover td {
+  background: #f5f9ff;
+}
+
 .resource-table th {
   background: #f7f9fd;
   font-size: 0.82rem;
@@ -867,6 +916,69 @@ body {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.admin-status-pill {
+  border: 1px solid transparent;
+}
+
+.admin-status-pill--approved {
+  background: #e7f8ee;
+  color: #197245;
+  border-color: #b9e6c9;
+}
+
+.admin-status-pill--rejected {
+  background: #ffecef;
+  color: #b4233f;
+  border-color: #f4bec9;
+}
+
+.admin-status-pill--pending {
+  background: #fff6e8;
+  color: #a35a04;
+  border-color: #f2d6ae;
+}
+
+.admin-action-btn {
+  min-width: 92px;
+  transition: all 0.18s ease;
+}
+
+.admin-action-btn--approve-active {
+  background: #1f9d55;
+  border-color: #1f9d55;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(31, 157, 85, 0.28);
+}
+
+.admin-action-btn--approve-active:hover {
+  background: #178146;
+  border-color: #178146;
+}
+
+.admin-action-btn--reject-active {
+  background: #c6384f;
+  border-color: #c6384f;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(198, 56, 79, 0.25);
+}
+
+.admin-action-btn--reject-active:hover {
+  background: #ac2f44;
+  border-color: #ac2f44;
+}
+
+.admin-action-btn--pending-active {
+  background: #f4a736;
+  border-color: #f4a736;
+  color: #202433;
+  box-shadow: 0 6px 14px rgba(244, 167, 54, 0.25);
+}
+
+.admin-action-btn--pending-active:hover {
+  background: #e39627;
+  border-color: #e39627;
 }
 
 .status-pill--active {

@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { changeAdminPassword, loginAdmin, loginWithGoogle } from './api';
 import ResourceCategoryPage from './catalog/ResourceCategoryPage';
+import AdminBookingsPage from './booking/AdminBookingsPage';
 import ResourceManagementPage from './catalog/ResourceManagementPage';
+import UserBookingRequestPage from './booking/UserBookingRequestPage';
+import UserBookingsPage from './booking/UserBookingsPage';
 import UserResourceLandingPage from './catalog/UserResourceLandingPage';
 import UserResourceTypePage from './catalog/UserResourceTypePage';
 import './App.css';
@@ -34,11 +37,24 @@ export default function App() {
       '/admin/resources/lecture-halls',
       '/admin/resources/meeting-rooms',
       '/admin/resources/equipment',
+      '/admin/bookings',
       '/resources',
       '/resources/lecture-halls',
       '/resources/meeting-rooms',
       '/resources/equipment',
+      '/my-bookings',
     ];
+
+    if (pathname.startsWith('/resources/lecture-halls/') && pathname.endsWith('/book')) {
+      return pathname;
+    }
+    if (pathname.startsWith('/resources/meeting-rooms/') && pathname.endsWith('/book')) {
+      return pathname;
+    }
+    if (pathname.startsWith('/resources/equipment/') && pathname.endsWith('/book')) {
+      return pathname;
+    }
+
     return allowedRoutes.includes(pathname) ? pathname : '/';
   }
 
@@ -149,6 +165,9 @@ export default function App() {
               <button type="button" className="site-nav__link" onClick={() => navigate('/resources')}>
                 Resources
               </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>
+                My Bookings
+              </button>
               <button type="button" className="site-nav__link" onClick={handleLogout}>
                 Logout
               </button>
@@ -184,6 +203,17 @@ export default function App() {
 
   if (route === '/resources/equipment') {
     return <UserResourceTypePage categorySlug="equipment" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
+  }
+
+  if (route === '/my-bookings') {
+    return <UserBookingsPage user={googleUser} navigate={navigate} onLogout={handleLogout} />;
+  }
+
+  if (route.startsWith('/resources/') && route.endsWith('/book')) {
+    const parts = route.split('/').filter(Boolean);
+    const categorySlug = parts[1];
+    const resourceId = parts[2];
+    return <UserBookingRequestPage categorySlug={categorySlug} resourceId={resourceId} user={googleUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/profile') {
@@ -250,6 +280,9 @@ export default function App() {
             <button type="button" onClick={() => navigate('/admin/resources')} className="btn btn--primary">
               Resource Management
             </button>
+            <button type="button" onClick={() => navigate('/admin/bookings')} className="btn btn--primary">
+              Booking Management
+            </button>
             <button type="button" onClick={() => navigate('/admin/profile')} className="btn btn--primary">
               Go to Profile
             </button>
@@ -276,6 +309,10 @@ export default function App() {
 
   if (route === '/admin/resources/equipment') {
     return <ResourceCategoryPage categorySlug="equipment" navigate={navigate} onBack={() => navigate('/admin/resources')} />;
+  }
+
+  if (route === '/admin/bookings') {
+    return <AdminBookingsPage navigate={navigate} />;
   }
 
   return (

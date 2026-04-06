@@ -174,8 +174,16 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
                       <div className="user-resource-mini-card__code">{resource.name}</div>
                       <div className="user-resource-mini-card__meta">
                         <p>{getLocationLabel(resource.location)}</p>
-                          <p>{formatSublocationLabel(resource.sublocation)}</p>
+                        <p>{formatSublocationLabel(resource.sublocation)}</p>
                         <p>Capacity: {resource.capacity}</p>
+                        <button
+                          type="button"
+                          className="btn btn--primary btn--compact"
+                          disabled={resource.status !== 'ACTIVE'}
+                          onClick={() => navigate(`/resources/${categorySlug}/${resource.id}/book`)}
+                        >
+                          {resource.status === 'ACTIVE' ? 'Book' : 'Unavailable'}
+                        </button>
                       </div>
                     </article>
                   ))}
