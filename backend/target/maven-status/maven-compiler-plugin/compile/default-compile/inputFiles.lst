@@ -1,3 +1,14 @@
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\controller\ResourceCatalogController.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\dto\AvailabilityWindowRequest.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\dto\AvailabilityWindowResponse.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\dto\ResourceCatalogRequest.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\dto\ResourceCatalogResponse.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\model\AvailabilityWindow.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\model\ResourceCatalogItem.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\model\ResourceCategory.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\model\ResourceStatus.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\repository\ResourceCatalogRepository.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\catalog\service\ResourceCatalogService.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\config\CorsConfig.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\controller\AuthController.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\dto\AdminLoginRequest.java
