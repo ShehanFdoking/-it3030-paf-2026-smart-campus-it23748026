@@ -30,39 +30,14 @@ export default function App() {
   });
   const [adminMessage, setAdminMessage] = useState('');
 
+  const isTechnicianUser = (user) => {
+    const role = (user?.role || '').toUpperCase();
+    const email = (user?.email || '').toLowerCase();
+    return role === 'TECHNICIAN' || email === 'tech@gamil.com' || email === 'tech@gmail.com';
+  };
+
   function getRoute(pathname) {
-    const allowedRoutes = [
-      '/',
-      '/home',
-      '/admin/dashboard',
-      '/admin/profile',
-      '/admin/resources',
-      '/admin/resources/lecture-halls',
-      '/admin/resources/meeting-rooms',
-      '/admin/resources/equipment',
-      '/admin/bookings',
-      '/admin/incidents',
-      '/resources',
-      '/resources/lecture-halls',
-      '/resources/meeting-rooms',
-      '/resources/equipment',
-      '/my-bookings',
-      '/my-tickets',
-    ];
-
-    if (pathname.startsWith('/resources/lecture-halls/') && pathname.endsWith('/book')) {
-      return pathname;
-    }
-    if (pathname.startsWith('/resources/meeting-rooms/') && pathname.endsWith('/book')) {
-      return pathname;
-    }
-    if (pathname.startsWith('/resources/equipment/') && pathname.endsWith('/book')) {
-      return pathname;
-    }
-    if (pathname.startsWith('/incidents/new/')) {
-      return pathname;
-    }
-
+    const allowedRoutes = ['/', '/home', '/admin/dashboard', '/admin/profile'];
     return allowedRoutes.includes(pathname) ? pathname : '/';
   }
 
@@ -113,9 +88,13 @@ export default function App() {
       setAdminUser(admin);
       setGoogleUser(null);
       setPasswordForm({ currentPassword: '', newPassword: '' });
-      navigate('/admin/dashboard');
+      if (isTechnicianUser(admin)) {
+        navigate('/tech/dashboard');
+      } else {
+        navigate('/admin/dashboard');
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Admin login failed');
+      setError(e instanceof Error ? e.message : 'Login failed');
       setAdminUser(null);
     } finally {
       setLoading(false);
@@ -322,30 +301,6 @@ export default function App() {
         </section>
       </main>
     );
-  }
-
-  if (route === '/admin/resources') {
-    return <ResourceManagementPage navigate={navigate} onBack={() => navigate('/admin/dashboard')} />;
-  }
-
-  if (route === '/admin/resources/lecture-halls') {
-    return <ResourceCategoryPage categorySlug="lecture-halls" navigate={navigate} onBack={() => navigate('/admin/resources')} />;
-  }
-
-  if (route === '/admin/resources/meeting-rooms') {
-    return <ResourceCategoryPage categorySlug="meeting-rooms" navigate={navigate} onBack={() => navigate('/admin/resources')} />;
-  }
-
-  if (route === '/admin/resources/equipment') {
-    return <ResourceCategoryPage categorySlug="equipment" navigate={navigate} onBack={() => navigate('/admin/resources')} />;
-  }
-
-  if (route === '/admin/bookings') {
-    return <AdminBookingsPage navigate={navigate} />;
-  }
-
-  if (route === '/admin/incidents') {
-    return <AdminIncidentTicketsPage adminUser={adminUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   return (
