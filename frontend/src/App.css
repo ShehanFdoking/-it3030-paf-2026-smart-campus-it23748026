@@ -1026,6 +1026,83 @@ body {
   border-color: #e39627;
 }
 
+.incident-images {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.incident-thumb {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #cfe0ff;
+  background: #fff;
+}
+
+.incident-comments {
+  margin-top: 12px;
+  border-top: 1px solid #d9e6fb;
+  padding-top: 12px;
+}
+
+.incident-comment-item {
+  border: 1px solid #deebff;
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.incident-comment-item p {
+  margin: 4px 0;
+}
+
+.incident-suggestion-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.resource-field__hint--reserve {
+  visibility: hidden;
+}
+
+.incident-ticket-grid {
+  align-items: start;
+}
+
+.incident-ticket-grid .resource-field {
+  align-content: start;
+}
+
+.incident-ticket-grid .input {
+  width: 100%;
+}
+
+.incident-ticket-grid textarea.input {
+  min-height: 110px;
+}
+
+.incident-ticket-grid input[type='file'].input {
+  min-height: 48px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+
+.incident-badge {
+  display: inline-block;
+  background: #fff3e6;
+  color: #b86100;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
 .status-pill--active {
   background: #e8f8ee;
   color: #177245;

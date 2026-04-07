@@ -7,6 +7,9 @@ import AdminBookingsPage from './booking/AdminBookingsPage';
 import ResourceManagementPage from './catalog/ResourceManagementPage';
 import UserBookingRequestPage from './booking/UserBookingRequestPage';
 import UserBookingsPage from './booking/UserBookingsPage';
+import IncidentTicketCreatePage from './incident/IncidentTicketCreatePage';
+import MyIncidentTicketsPage from './incident/MyIncidentTicketsPage';
+import AdminIncidentTicketsPage from './incident/AdminIncidentTicketsPage';
 import UserResourceLandingPage from './catalog/UserResourceLandingPage';
 import UserResourceTypePage from './catalog/UserResourceTypePage';
 import './App.css';
@@ -38,11 +41,13 @@ export default function App() {
       '/admin/resources/meeting-rooms',
       '/admin/resources/equipment',
       '/admin/bookings',
+      '/admin/incidents',
       '/resources',
       '/resources/lecture-halls',
       '/resources/meeting-rooms',
       '/resources/equipment',
       '/my-bookings',
+      '/my-tickets',
     ];
 
     if (pathname.startsWith('/resources/lecture-halls/') && pathname.endsWith('/book')) {
@@ -52,6 +57,9 @@ export default function App() {
       return pathname;
     }
     if (pathname.startsWith('/resources/equipment/') && pathname.endsWith('/book')) {
+      return pathname;
+    }
+    if (pathname.startsWith('/incidents/new/')) {
       return pathname;
     }
 
@@ -168,6 +176,9 @@ export default function App() {
               <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>
                 My Bookings
               </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/my-tickets')}>
+                My Tickets
+              </button>
               <button type="button" className="site-nav__link" onClick={handleLogout}>
                 Logout
               </button>
@@ -209,11 +220,22 @@ export default function App() {
     return <UserBookingsPage user={googleUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
+  if (route === '/my-tickets') {
+    return <MyIncidentTicketsPage user={googleUser} navigate={navigate} onLogout={handleLogout} />;
+  }
+
   if (route.startsWith('/resources/') && route.endsWith('/book')) {
     const parts = route.split('/').filter(Boolean);
     const categorySlug = parts[1];
     const resourceId = parts[2];
     return <UserBookingRequestPage categorySlug={categorySlug} resourceId={resourceId} user={googleUser} navigate={navigate} onLogout={handleLogout} />;
+  }
+
+  if (route.startsWith('/incidents/new/')) {
+    const parts = route.split('/').filter(Boolean);
+    const resourceId = parts[2];
+    const bookingId = parts[3] || '';
+    return <IncidentTicketCreatePage resourceId={resourceId} bookingId={bookingId} user={googleUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/profile') {
@@ -287,6 +309,9 @@ export default function App() {
             <button type="button" onClick={() => navigate('/admin/bookings')} className="btn btn--primary">
               Booking Management
             </button>
+            <button type="button" onClick={() => navigate('/admin/incidents')} className="btn btn--primary">
+              Incident Tickets
+            </button>
             <button type="button" onClick={() => navigate('/admin/profile')} className="btn btn--primary">
               Go to Profile
             </button>
@@ -317,6 +342,10 @@ export default function App() {
 
   if (route === '/admin/bookings') {
     return <AdminBookingsPage navigate={navigate} />;
+  }
+
+  if (route === '/admin/incidents') {
+    return <AdminIncidentTicketsPage adminUser={adminUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   return (

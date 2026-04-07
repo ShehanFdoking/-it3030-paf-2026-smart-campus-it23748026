@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { deleteMyBooking, listMyBookings, updateMyBooking } from '../api';
+import { deleteMyBooking, listMyBookings, updateMyBooking, listIncidentsByBookingId } from '../api';
 import { createBookingEditForm } from './bookingConfig';
 import { toNullableNumber } from './bookingHelpers';
 import { getLocationLabel, formatSublocationLabel } from '../catalog/resourceConfig';
@@ -21,6 +21,7 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState('');
+  const [incidentsByBooking, setIncidentsByBooking] = useState({});
   const [form, setForm] = useState({ bookingDate: '', startTime: '', endTime: '', purpose: '', expectedAttendees: '', linkedRoomApprovalCode: '' });
 
   const load = async () => {
@@ -32,6 +33,18 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
     try {
       const data = await listMyBookings(user.email);
       setBookings(data);
+
+      // Load incidents for each booking
+      const incidentsMap = {};
+      for (const booking of data) {
+        try {
+          const incidents = await listIncidentsByBookingId(booking.id);
+          incidentsMap[booking.id] = incidents;
+        } catch (err) {
+          incidentsMap[booking.id] = [];
+        }
+      }
+      setIncidentsByBooking(incidentsMap);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load bookings');
     } finally {
@@ -119,6 +132,7 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
             <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/resources')}>Resources</button>
             <button type="button" className="site-nav__link is-active" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/my-tickets')}>My Tickets</button>
             <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
           </div>
         </nav>
@@ -141,6 +155,7 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
                 <th>Location</th>
                 <th>Status</th>
                 <th>Approval Code</th>
+                <th>Issues Reported</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -165,6 +180,13 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
                     ) : null}
                   </td>
                   <td>
+                    {incidentsByBooking[booking.id]?.length > 0 ? (
+                      <span className="incident-badge">{incidentsByBooking[booking.id].length} reported</span>
+                    ) : (
+                      <span className="muted">None</span>
+                    )}
+                  </td>
+                  <td>
                     <div className="table-actions">
                       {!booking.systemGenerated && booking.status === 'PENDING' ? (
                         <button type="button" className="btn btn--ghost btn--compact btn--edit" onClick={() => startEdit(booking)}>Edit</button>
@@ -172,6 +194,13 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
                       {!booking.systemGenerated ? (
                         <button type="button" className="btn btn--ghost btn--compact btn--delete" onClick={() => removeBooking(booking.id)}>Delete</button>
                       ) : <span className="muted">Auto-linked</span>}
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--compact"
+                        onClick={() => navigate(`/incidents/new/${booking.resourceId}/${booking.id}`)}
+                      >
+                        Report Issue
+                      </button>
                     </div>
                   </td>
                 </tr>

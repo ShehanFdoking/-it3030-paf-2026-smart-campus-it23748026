@@ -163,3 +163,86 @@ export async function updateBookingStatus(id, status, adminNote = '') {
 
   return parseApiResponse(response);
 }
+
+export async function createIncidentTicket(payload) {
+  const response = await fetch(`${API_BASE_URL}/api/incidents`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseApiResponse(response);
+}
+
+export async function listMyIncidentTickets(email) {
+  const url = new URL(`${API_BASE_URL}/api/incidents/my`);
+  url.searchParams.set('email', email);
+  const response = await fetch(url);
+  return parseApiResponse(response);
+}
+
+export async function listAdminIncidentTickets({ status, search } = {}) {
+  const url = new URL(`${API_BASE_URL}/api/admin/incidents`);
+  if (status && status !== 'ALL') {
+    url.searchParams.set('status', status);
+  }
+  if (search && search.trim()) {
+    url.searchParams.set('search', search.trim());
+  }
+  const response = await fetch(url);
+  return parseApiResponse(response);
+}
+
+export async function updateIncidentTicket(id, payload) {
+  const response = await fetch(`${API_BASE_URL}/api/admin/incidents/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseApiResponse(response);
+}
+
+export async function addIncidentComment(id, payload) {
+  const response = await fetch(`${API_BASE_URL}/api/incidents/${id}/comments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseApiResponse(response);
+}
+
+export async function updateIncidentComment(id, commentId, actorEmail, payload) {
+  const url = new URL(`${API_BASE_URL}/api/incidents/${id}/comments/${commentId}`);
+  url.searchParams.set('actorEmail', actorEmail);
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseApiResponse(response);
+}
+
+export async function deleteIncidentComment(id, commentId, actorEmail) {
+  const url = new URL(`${API_BASE_URL}/api/incidents/${id}/comments/${commentId}`);
+  url.searchParams.set('actorEmail', actorEmail);
+  const response = await fetch(url, {
+    method: 'DELETE',
+  });
+  return parseApiResponse(response);
+}
+
+export async function listIncidentsByBookingId(bookingId) {
+  const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/incidents`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch incidents for booking ${bookingId}`);
+  }
+  return response.json();
+}

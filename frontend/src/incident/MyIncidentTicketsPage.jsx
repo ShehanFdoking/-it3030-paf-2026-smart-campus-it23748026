@@ -1,0 +1,170 @@
+import { useEffect, useState } from 'react';
+import {
+  addIncidentComment,
+  deleteIncidentComment,
+  listMyIncidentTickets,
+  updateIncidentComment,
+} from '../api';
+import { canEditOwnComment, formatDateTime } from './incidentHelpers';
+
+export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [commentTextByTicket, setCommentTextByTicket] = useState({});
+  const [editingComment, setEditingComment] = useState({ ticketId: '', commentId: '', text: '' });
+
+  const load = async () => {
+    if (!user?.email) {
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listMyIncidentTickets(user.email);
+      setTickets(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load tickets');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, [user?.email]);
+
+  const addComment = async (ticketId) => {
+    const text = (commentTextByTicket[ticketId] || '').trim();
+    if (!text || !user?.email || !user?.name) {
+      return;
+    }
+
+    try {
+      await addIncidentComment(ticketId, {
+        authorEmail: user.email,
+        authorName: user.name,
+        authorRole: 'USER',
+        text,
+      });
+      setCommentTextByTicket((current) => ({ ...current, [ticketId]: '' }));
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Comment failed');
+    }
+  };
+
+  const saveCommentEdit = async () => {
+    if (!editingComment.ticketId || !editingComment.commentId || !user?.email) {
+      return;
+    }
+
+    try {
+      await updateIncidentComment(editingComment.ticketId, editingComment.commentId, user.email, { text: editingComment.text });
+      setEditingComment({ ticketId: '', commentId: '', text: '' });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update comment');
+    }
+  };
+
+  const removeComment = async (ticketId, commentId) => {
+    if (!user?.email) {
+      return;
+    }
+    try {
+      await deleteIncidentComment(ticketId, commentId, user.email);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to delete comment');
+    }
+  };
+
+  return (
+    <main className="scene scene--user">
+      <section className="panel panel--content user-resource-detail">
+        <nav className="site-nav" aria-label="Main navigation">
+          <div className="site-nav__brand">
+            <span className="site-nav__dot" aria-hidden="true" />
+            <div>
+              <p className="site-nav__kicker">Smart Campus</p>
+              <strong>My Tickets</strong>
+            </div>
+          </div>
+          <div className="site-nav__links">
+            <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+            <button type="button" className="site-nav__link is-active" onClick={() => navigate('/my-tickets')}>My Tickets</button>
+            <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
+          </div>
+        </nav>
+
+        <h1 className="panel__title">My Incident Tickets</h1>
+        {loading ? <p className="muted">Loading tickets...</p> : null}
+        {message ? <p className="msg msg--success">{message}</p> : null}
+        {error ? <p className="msg msg--error">{error}</p> : null}
+
+        {!loading && !tickets.length ? <p className="muted">No tickets yet.</p> : null}
+
+        {tickets.map((ticket) => (
+          <article key={ticket.id} className="admin-booking-group">
+            <h3>{ticket.resourceName} - {ticket.category}</h3>
+            <p><strong>Status:</strong> {ticket.status} | <strong>Priority:</strong> {ticket.priority}</p>
+            <p><strong>Location:</strong> {ticket.resourceLocation} / {ticket.resourceSublocation}</p>
+            <p><strong>Preferred Contact:</strong> {ticket.preferredContact}</p>
+            <p><strong>Description:</strong> {ticket.description}</p>
+            <p><strong>Assigned Staff:</strong> {ticket.assignedStaffName || '-'} ({ticket.assignedStaffEmail || '-'})</p>
+            <p><strong>Resolution Notes:</strong> {ticket.resolutionNotes || '-'}</p>
+            <p><strong>Rejection Reason:</strong> {ticket.rejectionReason || '-'}</p>
+            <p><strong>Created:</strong> {formatDateTime(ticket.createdAt)}</p>
+
+            {ticket.attachments?.length ? (
+              <div className="incident-images">
+                {ticket.attachments.map((image, index) => <img key={`${ticket.id}-${index}`} src={image} alt="attachment" className="incident-thumb" />)}
+              </div>
+            ) : null}
+
+            <div className="incident-comments">
+              <h4>Comments</h4>
+              {ticket.comments?.length ? ticket.comments.map((comment) => (
+                <div key={comment.id} className="incident-comment-item">
+                  <p><strong>{comment.authorName}</strong> ({comment.authorRole}) - {formatDateTime(comment.updatedAt || comment.createdAt)}</p>
+                  {editingComment.ticketId === ticket.id && editingComment.commentId === comment.id ? (
+                    <>
+                      <textarea className="input" rows={2} value={editingComment.text} onChange={(event) => setEditingComment((current) => ({ ...current, text: event.target.value }))} />
+                      <div className="actions-row">
+                        <button type="button" className="btn btn--primary btn--compact" onClick={saveCommentEdit}>Save</button>
+                        <button type="button" className="btn btn--ghost btn--compact" onClick={() => setEditingComment({ ticketId: '', commentId: '', text: '' })}>Cancel</button>
+                      </div>
+                    </>
+                  ) : (
+                    <p>{comment.text}</p>
+                  )}
+
+                  {canEditOwnComment(comment, user?.email) && editingComment.commentId !== comment.id ? (
+                    <div className="table-actions">
+                      <button type="button" className="btn btn--ghost btn--compact btn--edit" onClick={() => setEditingComment({ ticketId: ticket.id, commentId: comment.id, text: comment.text })}>Edit</button>
+                      <button type="button" className="btn btn--ghost btn--compact btn--delete" onClick={() => removeComment(ticket.id, comment.id)}>Delete</button>
+                    </div>
+                  ) : null}
+                </div>
+              )) : <p className="muted">No comments yet.</p>}
+
+              <div className="actions-row">
+                <textarea
+                  className="input"
+                  rows={2}
+                  placeholder="Add a comment"
+                  value={commentTextByTicket[ticket.id] || ''}
+                  onChange={(event) => setCommentTextByTicket((current) => ({ ...current, [ticket.id]: event.target.value }))}
+                />
+                <button type="button" className="btn btn--primary" onClick={() => addComment(ticket.id)}>Add Comment</button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </section>
+    </main>
+  );
+}
