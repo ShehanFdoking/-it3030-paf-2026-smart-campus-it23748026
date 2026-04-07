@@ -35,6 +35,7 @@ D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\dto\IncidentTic
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\dto\TicketCommentRequest.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\dto\TicketCommentUpdateRequest.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\dto\UpdateIncidentTicketRequest.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\dto\UpdateMyIncidentTicketRequest.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\model\CommentRole.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\model\IncidentTicket.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\model\TicketComment.java

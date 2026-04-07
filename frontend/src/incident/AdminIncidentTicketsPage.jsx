@@ -143,9 +143,55 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
   const resolvedCount = tickets.filter((item) => item.status === 'RESOLVED').length;
   const rejectedCount = tickets.filter((item) => item.status === 'REJECTED').length;
 
+  const getTicketStatusBadgeClass = (status) => {
+    switch ((status || '').toUpperCase()) {
+      case 'OPEN':
+        return 'ticket-status--open';
+      case 'IN_PROGRESS':
+        return 'ticket-status--in-progress';
+      case 'RESOLVED':
+        return 'ticket-status--resolved';
+      case 'CLOSED':
+        return 'ticket-status--closed';
+      case 'REJECTED':
+        return 'ticket-status--rejected';
+      default:
+        return '';
+    }
+  };
+
   return (
     <main className="scene scene--admin">
       <section className="panel panel--content admin-panel">
+        <nav className="site-nav" aria-label="Admin navigation">
+          <div className="site-nav__brand">
+            <span className="site-nav__dot" aria-hidden="true" />
+            <div>
+              <p className="site-nav__kicker">Smart Campus</p>
+              <strong>Admin Portal</strong>
+            </div>
+          </div>
+          <div className="site-nav__links">
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/dashboard')}>
+              Dashboard
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/resources')}>
+              Resources
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/bookings')}>
+              Bookings
+            </button>
+            <button type="button" className="site-nav__link is-active" onClick={() => navigate('/admin/incidents')}>
+              Tickets
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/profile')}>
+              Profile
+            </button>
+            <button type="button" className="site-nav__link" onClick={onLogout}>
+              Logout
+            </button>
+          </div>
+        </nav>
         <div className="resource-page__header">
           <div>
             <p className="kicker">INCIDENT MANAGEMENT</p>
@@ -167,8 +213,6 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
           </div>
           <div className="actions-row actions-row--tight">
             <button type="button" className="btn btn--ghost" onClick={load}>Refresh</button>
-            <button type="button" className="btn btn--ghost" onClick={() => navigate('/admin/dashboard')}>Back to Dashboard</button>
-            <button type="button" className="btn btn--ghost" onClick={onLogout}>Logout</button>
           </div>
         </div>
 
@@ -216,12 +260,19 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
 
         {tickets.map((ticket) => {
           const editor = editorByTicket[ticket.id] || createEditor();
+          const statusClass = getTicketStatusBadgeClass(ticket.status);
+          const cardStatusClass = statusClass ? `admin-booking-group--${statusClass.replace('ticket-status--', '')}` : '';
           return (
-            <article key={ticket.id} className="admin-booking-group">
-              <h3>{ticket.resourceName} - {ticket.category}</h3>
+            <article key={ticket.id} className={`admin-booking-group ${cardStatusClass}`}>
+              <div className="ticket-card__header">
+                <h3>{ticket.resourceName} - {ticket.category}</h3>
+                <span className={`incident-badge ticket-status-badge ${statusClass}`}>
+                  {ticket.status}
+                </span>
+              </div>
               <p><strong>Reporter:</strong> {ticket.reporterName} ({ticket.reporterEmail})</p>
               <p><strong>Location:</strong> {ticket.resourceLocation} / {ticket.resourceSublocation}</p>
-              <p><strong>Priority:</strong> {ticket.priority} | <strong>Status:</strong> {ticket.status}</p>
+              <p><strong>Priority:</strong> {ticket.priority}</p>
               <p><strong>Created:</strong> {formatDateTime(ticket.createdAt)}</p>
               <p><strong>Description:</strong> {ticket.description}</p>
 

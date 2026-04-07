@@ -183,6 +183,28 @@ export async function listMyIncidentTickets(email) {
   return parseApiResponse(response);
 }
 
+export async function updateMyIncidentTicket(id, email, payload) {
+  const url = new URL(`${API_BASE_URL}/api/incidents/${id}`);
+  url.searchParams.set('email', email);
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseApiResponse(response);
+}
+
+export async function deleteMyIncidentTicket(id, email) {
+  const url = new URL(`${API_BASE_URL}/api/incidents/${id}`);
+  url.searchParams.set('email', email);
+  const response = await fetch(url, {
+    method: 'DELETE',
+  });
+  return parseApiResponse(response);
+}
+
 export async function listAdminIncidentTickets({ status, search } = {}) {
   const url = new URL(`${API_BASE_URL}/api/admin/incidents`);
   if (status && status !== 'ALL') {

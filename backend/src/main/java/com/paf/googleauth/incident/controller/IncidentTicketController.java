@@ -4,6 +4,7 @@ import com.paf.googleauth.incident.dto.CreateIncidentTicketRequest;
 import com.paf.googleauth.incident.dto.IncidentTicketResponse;
 import com.paf.googleauth.incident.dto.TicketCommentRequest;
 import com.paf.googleauth.incident.dto.TicketCommentUpdateRequest;
+import com.paf.googleauth.incident.dto.UpdateMyIncidentTicketRequest;
 import com.paf.googleauth.incident.dto.UpdateIncidentTicketRequest;
 import com.paf.googleauth.incident.model.TicketStatus;
 import com.paf.googleauth.incident.service.IncidentTicketService;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -41,6 +43,20 @@ public class IncidentTicketController {
         return incidentTicketService.listMyTickets(email);
     }
 
+    @PutMapping("/incidents/{id}")
+    public IncidentTicketResponse updateMyTicket(
+            @PathVariable String id,
+            @RequestParam String email,
+            @Valid @RequestBody UpdateMyIncidentTicketRequest request) {
+        return incidentTicketService.updateMyTicket(id, email, request);
+    }
+
+    @DeleteMapping("/incidents/{id}")
+    public Map<String, String> deleteMyTicket(@PathVariable String id, @RequestParam String email) {
+        incidentTicketService.deleteMyTicket(id, email);
+        return Map.of("message", "Ticket deleted successfully");
+    }
+
     @GetMapping("/admin/incidents")
     public List<IncidentTicketResponse> listAdmin(
             @RequestParam(required = false) TicketStatus status,
@@ -59,7 +75,8 @@ public class IncidentTicketController {
     }
 
     @PostMapping("/incidents/{id}/comments")
-    public IncidentTicketResponse addComment(@PathVariable String id, @Valid @RequestBody TicketCommentRequest request) {
+    public IncidentTicketResponse addComment(@PathVariable String id,
+            @Valid @RequestBody TicketCommentRequest request) {
         return incidentTicketService.addComment(id, request);
     }
 

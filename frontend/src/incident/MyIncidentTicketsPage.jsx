@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
   addIncidentComment,
+  deleteMyIncidentTicket,
   deleteIncidentComment,
   listMyIncidentTickets,
+  updateMyIncidentTicket,
   updateIncidentComment,
 } from '../api';
+import { INCIDENT_PRIORITIES } from './incidentConfig';
 import { canEditOwnComment, formatDateTime } from './incidentHelpers';
 
 export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
@@ -14,6 +17,14 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
   const [message, setMessage] = useState('');
   const [commentTextByTicket, setCommentTextByTicket] = useState({});
   const [editingComment, setEditingComment] = useState({ ticketId: '', commentId: '', text: '' });
+  const [editingTicketId, setEditingTicketId] = useState('');
+  const [ticketEditForm, setTicketEditForm] = useState({
+    category: '',
+    description: '',
+    priority: 'MEDIUM',
+    preferredContact: '',
+    attachments: [],
+  });
 
   const load = async () => {
     if (!user?.email) {
@@ -81,6 +92,79 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
     }
   };
 
+  const startTicketEdit = (ticket) => {
+    setEditingTicketId(ticket.id);
+    setTicketEditForm({
+      category: ticket.category || '',
+      description: ticket.description || '',
+      priority: ticket.priority || 'MEDIUM',
+      preferredContact: ticket.preferredContact || '',
+      attachments: ticket.attachments || [],
+    });
+    setError('');
+    setMessage('');
+  };
+
+  const cancelTicketEdit = () => {
+    setEditingTicketId('');
+    setTicketEditForm({
+      category: '',
+      description: '',
+      priority: 'MEDIUM',
+      preferredContact: '',
+      attachments: [],
+    });
+  };
+
+  const saveTicketEdit = async (ticketId) => {
+    if (!user?.email) {
+      return;
+    }
+
+    try {
+      await updateMyIncidentTicket(ticketId, user.email, ticketEditForm);
+      setMessage('Ticket updated successfully');
+      cancelTicketEdit();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update ticket');
+    }
+  };
+
+  const removeTicket = async (ticketId) => {
+    if (!user?.email) {
+      return;
+    }
+    if (!window.confirm('Delete this ticket? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteMyIncidentTicket(ticketId, user.email);
+      setMessage('Ticket deleted successfully');
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to delete ticket');
+    }
+  };
+
+  const getTicketStatusBadgeClass = (status) => {
+    switch ((status || '').toUpperCase()) {
+      case 'OPEN':
+        return 'ticket-status--open';
+      case 'IN_PROGRESS':
+        return 'ticket-status--in-progress';
+      case 'RESOLVED':
+        return 'ticket-status--resolved';
+      case 'CLOSED':
+        return 'ticket-status--closed';
+      case 'REJECTED':
+        return 'ticket-status--rejected';
+      default:
+        return '';
+    }
+  };
+
   return (
     <main className="scene scene--user">
       <section className="panel panel--content user-resource-detail">
@@ -108,9 +192,17 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
         {!loading && !tickets.length ? <p className="muted">No tickets yet.</p> : null}
 
         {tickets.map((ticket) => (
-          <article key={ticket.id} className="admin-booking-group">
-            <h3>{ticket.resourceName} - {ticket.category}</h3>
-            <p><strong>Status:</strong> {ticket.status} | <strong>Priority:</strong> {ticket.priority}</p>
+          <article key={ticket.id} className={`admin-booking-group ${(() => {
+            const statusClass = getTicketStatusBadgeClass(ticket.status);
+            return statusClass ? `admin-booking-group--${statusClass.replace('ticket-status--', '')}` : '';
+          })()}`}>
+            <div className="ticket-card__header">
+              <h3>{ticket.resourceName} - {ticket.category}</h3>
+              <span className={`incident-badge ticket-status-badge ${getTicketStatusBadgeClass(ticket.status)}`}>
+                {ticket.status}
+              </span>
+            </div>
+            <p><strong>Priority:</strong> {ticket.priority}</p>
             <p><strong>Location:</strong> {ticket.resourceLocation} / {ticket.resourceSublocation}</p>
             <p><strong>Preferred Contact:</strong> {ticket.preferredContact}</p>
             <p><strong>Description:</strong> {ticket.description}</p>
@@ -118,6 +210,75 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
             <p><strong>Resolution Notes:</strong> {ticket.resolutionNotes || '-'}</p>
             <p><strong>Rejection Reason:</strong> {ticket.rejectionReason || '-'}</p>
             <p><strong>Created:</strong> {formatDateTime(ticket.createdAt)}</p>
+
+            <div className="actions-row">
+              <button
+                type="button"
+                className="btn btn--ghost btn--compact btn--edit"
+                onClick={() => startTicketEdit(ticket)}
+                disabled={ticket.status !== 'OPEN'}
+                title={ticket.status !== 'OPEN' ? 'Only OPEN tickets can be edited' : ''}
+              >
+                Edit Ticket
+              </button>
+              <button
+                type="button"
+                className="btn btn--ghost btn--compact btn--delete"
+                onClick={() => removeTicket(ticket.id)}
+                disabled={ticket.status !== 'OPEN'}
+                title={ticket.status !== 'OPEN' ? 'Only OPEN tickets can be deleted' : ''}
+              >
+                Delete Ticket
+              </button>
+            </div>
+
+            {editingTicketId === ticket.id ? (
+              <div className="resource-grid" style={{ marginTop: 10 }}>
+                <label className="resource-field">
+                  <span>Category</span>
+                  <input
+                    className="input"
+                    value={ticketEditForm.category}
+                    onChange={(event) => setTicketEditForm((current) => ({ ...current, category: event.target.value }))}
+                  />
+                </label>
+                <label className="resource-field">
+                  <span>Priority</span>
+                  <select
+                    className="input"
+                    value={ticketEditForm.priority}
+                    onChange={(event) => setTicketEditForm((current) => ({ ...current, priority: event.target.value }))}
+                  >
+                    {INCIDENT_PRIORITIES.map((priority) => <option key={priority} value={priority}>{priority}</option>)}
+                  </select>
+                </label>
+                <label className="resource-field">
+                  <span>Preferred Contact</span>
+                  <input
+                    className="input"
+                    value={ticketEditForm.preferredContact}
+                    onChange={(event) => setTicketEditForm((current) => ({ ...current, preferredContact: event.target.value }))}
+                  />
+                </label>
+                <label className="resource-field">
+                  <span>Description</span>
+                  <textarea
+                    className="input"
+                    rows={3}
+                    value={ticketEditForm.description}
+                    onChange={(event) => setTicketEditForm((current) => ({ ...current, description: event.target.value }))}
+                  />
+                </label>
+                <div className="actions-row">
+                  <button type="button" className="btn btn--primary btn--compact" onClick={() => saveTicketEdit(ticket.id)}>
+                    Save Ticket
+                  </button>
+                  <button type="button" className="btn btn--ghost btn--compact" onClick={cancelTicketEdit}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             {ticket.attachments?.length ? (
               <div className="incident-images">

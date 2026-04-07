@@ -4,7 +4,7 @@ import { BOOKING_CATEGORY_OPTIONS, BOOKING_STATUS_OPTIONS } from './bookingConfi
 import { mapBookingsByCategory } from './bookingHelpers';
 import { getLocationLabel, formatSublocationLabel } from '../catalog/resourceConfig';
 
-export default function AdminBookingsPage({ navigate }) {
+export default function AdminBookingsPage({ navigate, onLogout }) {
   const [bookings, setBookings] = useState([]);
   const [category, setCategory] = useState('ALL');
   const [status, setStatus] = useState('ALL');
@@ -126,6 +126,35 @@ export default function AdminBookingsPage({ navigate }) {
   return (
     <main className="scene scene--admin">
       <section className="panel panel--content admin-panel">
+        <nav className="site-nav" aria-label="Admin navigation">
+          <div className="site-nav__brand">
+            <span className="site-nav__dot" aria-hidden="true" />
+            <div>
+              <p className="site-nav__kicker">Smart Campus</p>
+              <strong>Admin Portal</strong>
+            </div>
+          </div>
+          <div className="site-nav__links">
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/dashboard')}>
+              Dashboard
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/resources')}>
+              Resources
+            </button>
+            <button type="button" className="site-nav__link is-active" onClick={() => navigate('/admin/bookings')}>
+              Bookings
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/incidents')}>
+              Tickets
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/profile')}>
+              Profile
+            </button>
+            <button type="button" className="site-nav__link" onClick={onLogout}>
+              Logout
+            </button>
+          </div>
+        </nav>
         <div className="resource-page__header">
           <div>
             <p className="kicker">BOOKING MANAGEMENT</p>

@@ -12,6 +12,8 @@ import MyIncidentTicketsPage from './incident/MyIncidentTicketsPage';
 import AdminIncidentTicketsPage from './incident/AdminIncidentTicketsPage';
 import UserResourceLandingPage from './catalog/UserResourceLandingPage';
 import UserResourceTypePage from './catalog/UserResourceTypePage';
+import TechnicianDashboardPage from './tech/TechnicianDashboardPage';
+import TechnicianResolvedTicketsPage from './tech/TechnicianResolvedTicketsPage';
 import './App.css';
 
 export default function App() {
@@ -37,8 +39,44 @@ export default function App() {
   };
 
   function getRoute(pathname) {
-    const allowedRoutes = ['/', '/home', '/admin/dashboard', '/admin/profile'];
-    return allowedRoutes.includes(pathname) ? pathname : '/';
+    const allowedRoutes = [
+      '/',
+      '/home',
+      '/resources',
+      '/resources/lecture-halls',
+      '/resources/meeting-rooms',
+      '/resources/equipment',
+      '/admin/resources/lecture-halls',
+      '/admin/resources/meeting-rooms',
+      '/admin/resources/equipment',
+      '/my-bookings',
+      '/my-tickets',
+      '/admin/dashboard',
+      '/admin/profile',
+      '/admin/resources',
+      '/admin/bookings',
+      '/admin/incidents',
+      '/tech/dashboard',
+      '/tech/resolved',
+    ];
+    
+    // Check exact match first
+    if (allowedRoutes.includes(pathname)) {
+      return pathname;
+    }
+    
+    // Check dynamic routes
+    if (pathname.startsWith('/resources/') && pathname.endsWith('/book')) {
+      return pathname;
+    }
+    if (pathname.startsWith('/admin/resources/') && pathname.endsWith('/book')) {
+      return pathname;
+    }
+    if (pathname.startsWith('/incidents/new/')) {
+      return pathname;
+    }
+    
+    return '/';
   }
 
   const navigate = (nextRoute) => {
@@ -221,6 +259,35 @@ export default function App() {
     return (
       <main className="scene scene--admin">
         <section className="panel panel--content admin-panel">
+          <nav className="site-nav" aria-label="Admin navigation">
+            <div className="site-nav__brand">
+              <span className="site-nav__dot" aria-hidden="true" />
+              <div>
+                <p className="site-nav__kicker">Smart Campus</p>
+                <strong>Admin Portal</strong>
+              </div>
+            </div>
+            <div className="site-nav__links">
+              <button type="button" className="site-nav__link" onClick={() => navigate('/admin/dashboard')}>
+                Dashboard
+              </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/admin/resources')}>
+                Resources
+              </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/admin/bookings')}>
+                Bookings
+              </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/admin/incidents')}>
+                Tickets
+              </button>
+              <button type="button" className="site-nav__link is-active" onClick={() => navigate('/admin/profile')}>
+                Profile
+              </button>
+              <button type="button" className="site-nav__link" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          </nav>
           <h1 className="panel__title">Admin Profile</h1>
           {!adminUser ? (
             <p>Admin session not found. Please log in again.</p>
@@ -278,6 +345,35 @@ export default function App() {
     return (
       <main className="scene scene--admin">
         <section className="panel panel--content admin-panel">
+          <nav className="site-nav" aria-label="Admin navigation">
+            <div className="site-nav__brand">
+              <span className="site-nav__dot" aria-hidden="true" />
+              <div>
+                <p className="site-nav__kicker">Smart Campus</p>
+                <strong>Admin Portal</strong>
+              </div>
+            </div>
+            <div className="site-nav__links">
+              <button type="button" className="site-nav__link is-active" onClick={() => navigate('/admin/dashboard')}>
+                Dashboard
+              </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/admin/resources')}>
+                Resources
+              </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/admin/bookings')}>
+                Bookings
+              </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/admin/incidents')}>
+                Tickets
+              </button>
+              <button type="button" className="site-nav__link" onClick={() => navigate('/admin/profile')}>
+                Profile
+              </button>
+              <button type="button" className="site-nav__link" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          </nav>
           <h1 className="panel__title">Admin Dashboard</h1>
           {!adminUser ? <p>Admin session not found. Please sign in again.</p> : <p>Welcome to the admin dashboard.</p>}
 
@@ -301,6 +397,68 @@ export default function App() {
         </section>
       </main>
     );
+  }
+
+  if (route === '/admin/resources') {
+    return <ResourceManagementPage navigate={navigate} onLogout={handleLogout} />;
+  }
+
+  if (route === '/admin/resources/lecture-halls') {
+    return <ResourceCategoryPage categorySlug="lecture-halls" navigate={navigate} onBack={() => navigate('/admin/resources')} onLogout={handleLogout} />;
+  }
+
+  if (route === '/admin/resources/meeting-rooms') {
+    return <ResourceCategoryPage categorySlug="meeting-rooms" navigate={navigate} onBack={() => navigate('/admin/resources')} onLogout={handleLogout} />;
+  }
+
+  if (route === '/admin/resources/equipment') {
+    return <ResourceCategoryPage categorySlug="equipment" navigate={navigate} onBack={() => navigate('/admin/resources')} onLogout={handleLogout} />;
+  }
+
+  if (route === '/admin/bookings') {
+    return <AdminBookingsPage navigate={navigate} onLogout={handleLogout} />;
+  }
+
+  if (route === '/admin/incidents') {
+    return <AdminIncidentTicketsPage adminUser={adminUser} navigate={navigate} onLogout={handleLogout} />;
+  }
+
+  if (route === '/tech/dashboard') {
+    if (!adminUser || !isTechnicianUser(adminUser)) {
+      return (
+        <main className="scene scene--admin">
+          <section className="panel panel--content admin-panel">
+            <h1 className="panel__title">Access Denied</h1>
+            <p>You do not have permission to access the Technician Dashboard. Only technicians can view this page.</p>
+            <div className="actions-row">
+              <button type="button" onClick={handleLogout} className="btn btn--primary">
+                Return to Login
+              </button>
+            </div>
+          </section>
+        </main>
+      );
+    }
+    return <TechnicianDashboardPage navigate={navigate} onLogout={handleLogout} user={adminUser} />;
+  }
+
+  if (route === '/tech/resolved') {
+    if (!adminUser || !isTechnicianUser(adminUser)) {
+      return (
+        <main className="scene scene--admin">
+          <section className="panel panel--content admin-panel">
+            <h1 className="panel__title">Access Denied</h1>
+            <p>You do not have permission to access the Technician Dashboard. Only technicians can view this page.</p>
+            <div className="actions-row">
+              <button type="button" onClick={handleLogout} className="btn btn--primary">
+                Return to Login
+              </button>
+            </div>
+          </section>
+        </main>
+      );
+    }
+    return <TechnicianResolvedTicketsPage navigate={navigate} onLogout={handleLogout} user={adminUser} />;
   }
 
   return (

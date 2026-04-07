@@ -7,6 +7,7 @@ import com.paf.googleauth.incident.dto.IncidentCommentResponse;
 import com.paf.googleauth.incident.dto.IncidentTicketResponse;
 import com.paf.googleauth.incident.dto.TicketCommentRequest;
 import com.paf.googleauth.incident.dto.TicketCommentUpdateRequest;
+import com.paf.googleauth.incident.dto.UpdateMyIncidentTicketRequest;
 import com.paf.googleauth.incident.dto.UpdateIncidentTicketRequest;
 import com.paf.googleauth.incident.model.CommentRole;
 import com.paf.googleauth.incident.model.IncidentTicket;
@@ -29,7 +30,7 @@ public class IncidentTicketService {
     private final ResourceCatalogRepository resourceCatalogRepository;
 
     public IncidentTicketService(IncidentTicketRepository incidentTicketRepository,
-                                 ResourceCatalogRepository resourceCatalogRepository) {
+            ResourceCatalogRepository resourceCatalogRepository) {
         this.incidentTicketRepository = incidentTicketRepository;
         this.resourceCatalogRepository = resourceCatalogRepository;
     }
@@ -66,6 +67,44 @@ public class IncidentTicketService {
                 .toList();
     }
 
+    public IncidentTicketResponse updateMyTicket(String ticketId, String reporterEmail,
+            UpdateMyIncidentTicketRequest request) {
+        IncidentTicket ticket = incidentTicketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        if (!ticket.getReporterEmail().equalsIgnoreCase(trim(reporterEmail))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only edit your own tickets");
+        }
+        if (ticket.getStatus() != TicketStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only OPEN tickets can be edited");
+        }
+
+        validateAttachments(request.attachments());
+
+        ticket.setCategory(request.category().trim());
+        ticket.setDescription(request.description().trim());
+        ticket.setPriority(request.priority());
+        ticket.setPreferredContact(request.preferredContact().trim());
+        ticket.setAttachments(request.attachments() == null ? List.of() : request.attachments());
+        ticket.setUpdatedAt(Instant.now());
+
+        return toResponse(incidentTicketRepository.save(ticket));
+    }
+
+    public void deleteMyTicket(String ticketId, String reporterEmail) {
+        IncidentTicket ticket = incidentTicketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        if (!ticket.getReporterEmail().equalsIgnoreCase(trim(reporterEmail))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own tickets");
+        }
+        if (ticket.getStatus() != TicketStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only OPEN tickets can be deleted");
+        }
+
+        incidentTicketRepository.delete(ticket);
+    }
+
     public List<IncidentTicketResponse> listAdminTickets(TicketStatus status, String search) {
         List<IncidentTicket> tickets = status == null
                 ? incidentTicketRepository.findAllByOrderByCreatedAtDesc()
@@ -87,7 +126,8 @@ public class IncidentTicketService {
         IncidentTicket ticket = incidentTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
 
-        boolean hasAssignedStaffUpdate = !isBlank(request.assignedStaffEmail()) || !isBlank(request.assignedStaffName());
+        boolean hasAssignedStaffUpdate = !isBlank(request.assignedStaffEmail())
+                || !isBlank(request.assignedStaffName());
 
         if (!isBlank(request.assignedStaffEmail())) {
             ticket.setAssignedStaffEmail(request.assignedStaffEmail().trim());
@@ -154,7 +194,8 @@ public class IncidentTicketService {
         return toResponse(incidentTicketRepository.save(ticket));
     }
 
-    public IncidentTicketResponse updateComment(String ticketId, String commentId, String actorEmail, TicketCommentUpdateRequest request) {
+    public IncidentTicketResponse updateComment(String ticketId, String commentId, String actorEmail,
+            TicketCommentUpdateRequest request) {
         IncidentTicket ticket = incidentTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
 
