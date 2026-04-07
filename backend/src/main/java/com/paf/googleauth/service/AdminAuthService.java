@@ -60,12 +60,6 @@ public class AdminAuthService {
             return false;
         }
         String normalized = email.trim().toLowerCase();
-        if (technicianEmail.equalsIgnoreCase(normalized)) {
-            return true;
-        }
-
-        // Accept common typo variant as alias for smoother login.
-        return "tech@gmail.com".equalsIgnoreCase(normalized)
-                || "tech@gamil.com".equalsIgnoreCase(normalized);
+        return technicianEmail.equalsIgnoreCase(normalized);
     }
 }

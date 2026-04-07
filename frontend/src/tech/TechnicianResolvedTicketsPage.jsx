@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { listAdminIncidentTickets } from '../api';
 import { formatDateTime } from '../incident/incidentHelpers';
+import { openNotifications } from '../notification/notificationBus';
 
 export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user }) {
   const [tickets, setTickets] = useState([]);
@@ -11,8 +12,29 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
     setLoading(true);
     setError('');
     try {
-      const data = await listAdminIncidentTickets({ status: 'RESOLVED' });
-      setTickets(data);
+      const [resolvedTickets, closedTickets] = await Promise.all([
+        listAdminIncidentTickets({ status: 'RESOLVED' }),
+        listAdminIncidentTickets({ status: 'CLOSED' }),
+      ]);
+
+      const technicianEmail = (user?.email || '').toLowerCase();
+      const technicianEmailAliases = new Set(
+        [technicianEmail, 'tech@gamil.com', 'tech@gmail.com']
+          .map((email) => (email || '').trim().toLowerCase())
+          .filter(Boolean)
+      );
+      const combined = [...resolvedTickets, ...closedTickets];
+      const uniqueTickets = Array.from(new Map(combined.map((ticket) => [ticket.id, ticket])).values())
+        .filter((ticket) => {
+          if (!technicianEmailAliases.size) {
+            return true;
+          }
+          const assignedEmail = (ticket.assignedStaffEmail || '').trim().toLowerCase();
+          return technicianEmailAliases.has(assignedEmail);
+        })
+        .sort((left, right) => new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime());
+
+      setTickets(uniqueTickets);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load resolved tickets');
     } finally {
@@ -23,6 +45,17 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
   useEffect(() => {
     loadResolvedTickets();
   }, []);
+
+  const getTicketStatusBadgeClass = (status) => {
+    switch ((status || '').toUpperCase()) {
+      case 'RESOLVED':
+        return 'ticket-status--resolved';
+      case 'CLOSED':
+        return 'ticket-status--closed';
+      default:
+        return '';
+    }
+  };
 
   return (
     <main className="scene scene--admin">
@@ -42,6 +75,9 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
             <button type="button" className="site-nav__link is-active" onClick={() => navigate('/tech/resolved')}>
               Resolved Tickets
             </button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+              Notifications
+            </button>
             <button type="button" className="site-nav__link" onClick={onLogout}>
               Logout
             </button>
@@ -52,7 +88,7 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
           <div>
             <p className="kicker">TECHNICIAN DASHBOARD</p>
             <h1 className="panel__title">Resolved Tickets</h1>
-            <p className="subtitle">Review old tickets that were resolved by technicians.</p>
+            <p className="subtitle">Review old tickets that you resolved or closed after resolution.</p>
           </div>
           <div className="actions-row actions-row--tight">
             <button type="button" className="btn btn--ghost" onClick={loadResolvedTickets}>Refresh</button>
@@ -67,9 +103,9 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
             <p>{user?.email}</p>
           </article>
           <article className="resource-card" style={{ cursor: 'default' }}>
-            <p className="resource-card__tag">Resolved</p>
+            <p className="resource-card__tag">Resolved History</p>
             <h2>{tickets.length}</h2>
-            <p>Old resolved tickets</p>
+            <p>Your resolved ticket history</p>
           </article>
         </div>
 
@@ -78,11 +114,13 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
 
         {!loading && !tickets.length ? <p className="muted">No resolved tickets found yet.</p> : null}
 
-        {tickets.map((ticket) => (
-          <article key={ticket.id} className="admin-booking-group admin-booking-group--resolved">
+        {tickets.map((ticket) => {
+          const statusClass = getTicketStatusBadgeClass(ticket.status);
+          return (
+          <article key={ticket.id} className={`admin-booking-group ${statusClass ? `admin-booking-group--${ticket.status.toLowerCase().replace('_', '-')}` : 'admin-booking-group--resolved'}`}>
             <div className="ticket-card__header">
               <h3>{ticket.resourceName} - {ticket.category}</h3>
-              <span className="incident-badge ticket-status-badge ticket-status--resolved">RESOLVED</span>
+              <span className={`incident-badge ticket-status-badge ${statusClass || 'ticket-status--resolved'}`}>{ticket.status}</span>
             </div>
             <p><strong>Reporter:</strong> {ticket.reporterName} ({ticket.reporterEmail})</p>
             <p><strong>Location:</strong> {ticket.resourceLocation} / {ticket.resourceSublocation}</p>
@@ -101,7 +139,8 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
               </div>
             ) : null}
           </article>
-        ))}
+          );
+        })}
       </section>
     </main>
   );

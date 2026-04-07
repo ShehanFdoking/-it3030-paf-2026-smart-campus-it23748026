@@ -3,6 +3,8 @@ import { deleteMyBooking, listMyBookings, updateMyBooking, listIncidentsByBookin
 import { createBookingEditForm } from './bookingConfig';
 import { toNullableNumber } from './bookingHelpers';
 import { getLocationLabel, formatSublocationLabel } from '../catalog/resourceConfig';
+import { openNotifications } from '../notification/notificationBus';
+import { requestConfirmation, showToast } from '../notification/notificationBus';
 
 function getTodayDateString() {
   const now = new Date();
@@ -94,13 +96,17 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
       });
       if (!result.success) {
         setError(result.message || 'Unable to update booking');
+        showToast(result.message || 'Unable to update booking', 'error', 'Booking update failed');
         return;
       }
       setMessage(result.message || 'Booking updated');
+      showToast(result.message || 'Booking updated', 'success', 'Booking updated');
       setEditingId('');
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Update failed');
+      const errorMessage = err instanceof Error ? err.message : 'Update failed';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Booking update failed');
     }
   };
 
@@ -108,13 +114,23 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
     if (!user?.email) {
       return;
     }
-    try {
-      await deleteMyBooking(bookingId, user.email);
-      setMessage('Booking deleted');
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed');
-    }
+    requestConfirmation({
+      title: 'Cancel booking?',
+      message: 'This booking will be permanently cancelled.',
+      confirmLabel: 'Cancel booking',
+      onConfirm: async () => {
+        try {
+          await deleteMyBooking(bookingId, user.email);
+          setMessage('Booking deleted');
+          showToast('Booking deleted successfully', 'success', 'Booking deleted');
+          await load();
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Delete failed';
+          setError(errorMessage);
+          showToast(errorMessage, 'error', 'Delete failed');
+        }
+      },
+    });
   };
 
   return (
@@ -133,6 +149,7 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
             <button type="button" className="site-nav__link" onClick={() => navigate('/resources')}>Resources</button>
             <button type="button" className="site-nav__link is-active" onClick={() => navigate('/my-bookings')}>My Bookings</button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/my-tickets')}>My Tickets</button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
             <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
           </div>
         </nav>

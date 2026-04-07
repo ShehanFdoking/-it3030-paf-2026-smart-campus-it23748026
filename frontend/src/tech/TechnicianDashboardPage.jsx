@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { listAdminIncidentTickets, updateIncidentTicket } from '../api';
 import { formatDateTime } from '../incident/incidentHelpers';
+import { openNotifications } from '../notification/notificationBus';
+import { showToast } from '../notification/notificationBus';
 
 export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
   const [tickets, setTickets] = useState([]);
@@ -23,6 +25,23 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
     }
   };
 
+  const getTicketStatusBadgeClass = (status) => {
+    switch ((status || '').toUpperCase()) {
+      case 'IN_PROGRESS':
+        return 'ticket-status--in-progress';
+      case 'RESOLVED':
+        return 'ticket-status--resolved';
+      case 'CLOSED':
+        return 'ticket-status--closed';
+      case 'OPEN':
+        return 'ticket-status--open';
+      case 'REJECTED':
+        return 'ticket-status--rejected';
+      default:
+        return '';
+    }
+  };
+
   const markAsResolved = async (ticketId) => {
     const notes = (resolutionByTicket[ticketId] || '').trim();
     if (!notes) {
@@ -37,11 +56,14 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
       await updateIncidentTicket(ticketId, {
         resolutionNotes: notes,
       });
-      setMessage('Ticket updated to RESOLVED successfully.');
+      setMessage('Ticket resolved successfully.');
       setResolutionByTicket((current) => ({ ...current, [ticketId]: '' }));
+      showToast('Ticket resolved successfully', 'success', 'Ticket updated');
       await loadInProgressTickets();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resolve ticket');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resolve ticket';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Resolve failed');
     }
   };
 
@@ -66,6 +88,9 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
             </button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/tech/resolved')}>
               Resolved Tickets
+            </button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+              Notifications
             </button>
             <button type="button" className="site-nav__link" onClick={onLogout}>
               Logout
@@ -105,11 +130,16 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
         {!loading && !tickets.length ? <p className="muted">No in-progress tickets at the moment. Check back soon!</p> : null}
 
         {tickets.map((ticket) => (
-          <article key={ticket.id} className="admin-booking-group admin-booking-group--in-progress">
-            <h3>{ticket.resourceName} - {ticket.category}</h3>
+          <article key={ticket.id} className="admin-booking-group admin-booking-group--in-progress ticket-card">
+            <div className="ticket-card__header">
+              <h3>{ticket.resourceName} - {ticket.category}</h3>
+              <span className={`incident-badge ticket-status-badge ${getTicketStatusBadgeClass(ticket.status)}`}>
+                {ticket.status}
+              </span>
+            </div>
             <p><strong>Reporter:</strong> {ticket.reporterName} ({ticket.reporterEmail})</p>
             <p><strong>Location:</strong> {ticket.resourceLocation} / {ticket.resourceSublocation}</p>
-            <p><strong>Priority:</strong> {ticket.priority} | <strong>Status:</strong> {ticket.status}</p>
+            <p><strong>Priority:</strong> {ticket.priority}</p>
             <p><strong>Assigned to:</strong> {ticket.assignedStaffName || 'Unassigned'} ({ticket.assignedStaffEmail || 'N/A'})</p>
             <p><strong>Created:</strong> {formatDateTime(ticket.createdAt)}</p>
             <p><strong>Description:</strong> {ticket.description}</p>
@@ -144,7 +174,7 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
 
             <div className="actions-row">
               <button type="button" className="btn btn--primary" onClick={() => markAsResolved(ticket.id)}>
-                Mark as Resolved
+                Resolve Ticket
               </button>
             </div>
 

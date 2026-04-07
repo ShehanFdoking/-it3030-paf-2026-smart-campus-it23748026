@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listResources } from '../api';
 import { formatSublocationLabel, getCategoryMeta, getLocationLabel } from './resourceConfig';
+import { openNotifications } from '../notification/notificationBus';
 
 function uniqueSublocations(resources) {
   return ['ALL', ...new Set(resources.map((resource) => resource.sublocation))];
@@ -101,6 +102,7 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
           <div className="site-nav__links">
             <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
             <button type="button" className="site-nav__link is-active" onClick={() => navigate('/resources')}>Resources</button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
             <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
           </div>
         </nav>

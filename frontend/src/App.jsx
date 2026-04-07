@@ -14,11 +14,29 @@ import UserResourceLandingPage from './catalog/UserResourceLandingPage';
 import UserResourceTypePage from './catalog/UserResourceTypePage';
 import TechnicianDashboardPage from './tech/TechnicianDashboardPage';
 import TechnicianResolvedTicketsPage from './tech/TechnicianResolvedTicketsPage';
+import { openNotifications } from './notification/notificationBus';
 import './App.css';
 
 export default function App() {
-  const [googleUser, setGoogleUser] = useState(null);
-  const [adminUser, setAdminUser] = useState(null);
+  const TECHNICIAN_EMAIL = 'tech@gamil.com';
+  const ADMIN_SESSION_KEY = 'adminUserSession';
+  const GOOGLE_SESSION_KEY = 'googleUserSession';
+  const [googleUser, setGoogleUser] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(GOOGLE_SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [adminUser, setAdminUser] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem(ADMIN_SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [route, setRoute] = useState(getRoute(window.location.pathname));
@@ -35,7 +53,7 @@ export default function App() {
   const isTechnicianUser = (user) => {
     const role = (user?.role || '').toUpperCase();
     const email = (user?.email || '').toLowerCase();
-    return role === 'TECHNICIAN' || email === 'tech@gamil.com' || email === 'tech@gmail.com';
+    return role === 'TECHNICIAN' && email === TECHNICIAN_EMAIL;
   };
 
   function getRoute(pathname) {
@@ -105,11 +123,14 @@ export default function App() {
     try {
       const data = await loginWithGoogle(credentialResponse.credential);
       setGoogleUser(data);
+      window.localStorage.setItem(GOOGLE_SESSION_KEY, JSON.stringify(data));
       setAdminUser(null);
+      window.localStorage.removeItem(ADMIN_SESSION_KEY);
       navigate('/home');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Google login failed');
       setGoogleUser(null);
+      window.localStorage.removeItem(GOOGLE_SESSION_KEY);
     } finally {
       setLoading(false);
     }
@@ -124,6 +145,7 @@ export default function App() {
     try {
       const admin = await loginAdmin(adminLoginForm.email, adminLoginForm.password);
       setAdminUser(admin);
+      window.localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(admin));
       setGoogleUser(null);
       setPasswordForm({ currentPassword: '', newPassword: '' });
       if (isTechnicianUser(admin)) {
@@ -134,6 +156,7 @@ export default function App() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Login failed');
       setAdminUser(null);
+      window.localStorage.removeItem(ADMIN_SESSION_KEY);
     } finally {
       setLoading(false);
     }
@@ -164,7 +187,9 @@ export default function App() {
 
   const handleLogout = () => {
     setGoogleUser(null);
+    window.localStorage.removeItem(GOOGLE_SESSION_KEY);
     setAdminUser(null);
+    window.localStorage.removeItem(ADMIN_SESSION_KEY);
     setError('');
     setAdminMessage('');
     setPasswordForm({ currentPassword: '', newPassword: '' });
@@ -195,6 +220,9 @@ export default function App() {
               </button>
               <button type="button" className="site-nav__link" onClick={() => navigate('/my-tickets')}>
                 My Tickets
+              </button>
+              <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+                Notifications
               </button>
               <button type="button" className="site-nav__link" onClick={handleLogout}>
                 Logout
@@ -283,6 +311,9 @@ export default function App() {
               <button type="button" className="site-nav__link is-active" onClick={() => navigate('/admin/profile')}>
                 Profile
               </button>
+              <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+                Notifications
+              </button>
               <button type="button" className="site-nav__link" onClick={handleLogout}>
                 Logout
               </button>
@@ -368,6 +399,9 @@ export default function App() {
               </button>
               <button type="button" className="site-nav__link" onClick={() => navigate('/admin/profile')}>
                 Profile
+              </button>
+              <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+                Notifications
               </button>
               <button type="button" className="site-nav__link" onClick={handleLogout}>
                 Logout

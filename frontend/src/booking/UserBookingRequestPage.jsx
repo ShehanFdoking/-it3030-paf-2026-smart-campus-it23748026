@@ -3,6 +3,8 @@ import { getResource, requestBooking } from '../api';
 import { createBookingRequestForm } from './bookingConfig';
 import { toNullableNumber } from './bookingHelpers';
 import { getCategoryMeta, getLocationLabel, formatSublocationLabel } from '../catalog/resourceConfig';
+import { openNotifications } from '../notification/notificationBus';
+import { showToast } from '../notification/notificationBus';
 
 function getTodayDateString() {
   const now = new Date();
@@ -81,14 +83,18 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
       });
 
       if (result.success) {
+        showToast('Booking request submitted successfully.', 'success', 'Booking submitted');
         navigate('/my-bookings');
         return;
       } else {
         setError(result.message || 'Unable to create booking');
         setSuggestions(result.suggestions || []);
+        showToast(result.message || 'Unable to create booking', 'error', 'Booking failed');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Booking request failed');
+      const errorMessage = err instanceof Error ? err.message : 'Booking request failed';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Booking failed');
     } finally {
       setSubmitting(false);
     }
@@ -109,6 +115,7 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
             <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/resources')}>Resources</button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
             <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
           </div>
         </nav>

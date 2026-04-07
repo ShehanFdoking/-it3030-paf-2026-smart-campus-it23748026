@@ -1,0 +1,27 @@
+.notification-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10500;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1a5ca6, #0e7fb5);
+  color: #fff;
+  box-shadow: 0 18px 38px rgba(26, 92, 166, 0.28);
+  cursor: pointer;
+}
+
+.notification-fab strong {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: #fff;
+  color: #1a5ca6;
+  font-size: 0.85rem;
+}

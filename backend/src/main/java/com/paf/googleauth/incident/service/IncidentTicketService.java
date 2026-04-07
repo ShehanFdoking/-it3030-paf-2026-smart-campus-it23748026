@@ -14,6 +14,7 @@ import com.paf.googleauth.incident.model.IncidentTicket;
 import com.paf.googleauth.incident.model.TicketComment;
 import com.paf.googleauth.incident.model.TicketStatus;
 import com.paf.googleauth.incident.repository.IncidentTicketRepository;
+import com.paf.googleauth.notification.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,11 +29,14 @@ public class IncidentTicketService {
 
     private final IncidentTicketRepository incidentTicketRepository;
     private final ResourceCatalogRepository resourceCatalogRepository;
+    private final NotificationService notificationService;
 
     public IncidentTicketService(IncidentTicketRepository incidentTicketRepository,
-            ResourceCatalogRepository resourceCatalogRepository) {
+            ResourceCatalogRepository resourceCatalogRepository,
+            NotificationService notificationService) {
         this.incidentTicketRepository = incidentTicketRepository;
         this.resourceCatalogRepository = resourceCatalogRepository;
+        this.notificationService = notificationService;
     }
 
     public IncidentTicketResponse createTicket(CreateIncidentTicketRequest request) {
@@ -125,6 +129,7 @@ public class IncidentTicketService {
     public IncidentTicketResponse updateTicket(String ticketId, UpdateIncidentTicketRequest request) {
         IncidentTicket ticket = incidentTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
+        TicketStatus previousStatus = ticket.getStatus();
 
         boolean hasAssignedStaffUpdate = !isBlank(request.assignedStaffEmail())
                 || !isBlank(request.assignedStaffName());
@@ -168,7 +173,17 @@ public class IncidentTicketService {
         }
 
         ticket.setUpdatedAt(Instant.now());
-        return toResponse(incidentTicketRepository.save(ticket));
+        IncidentTicketResponse response = toResponse(incidentTicketRepository.save(ticket));
+
+        if (previousStatus != ticket.getStatus()) {
+            notificationService.notifyTicketStatus(
+                    ticket.getReporterEmail(),
+                    ticket.getStatus().name(),
+                    ticket.getId(),
+                    ticket.getResourceName());
+        }
+
+        return response;
     }
 
     public IncidentTicketResponse addComment(String ticketId, TicketCommentRequest request) {
@@ -191,7 +206,16 @@ public class IncidentTicketService {
 
         ticket.getComments().add(comment);
         ticket.setUpdatedAt(Instant.now());
-        return toResponse(incidentTicketRepository.save(ticket));
+        IncidentTicketResponse response = toResponse(incidentTicketRepository.save(ticket));
+
+        if (request.authorRole() != CommentRole.USER) {
+            notificationService.notifyTicketComment(
+                    ticket.getReporterEmail(),
+                    ticket.getId(),
+                    ticket.getResourceName());
+        }
+
+        return response;
     }
 
     public IncidentTicketResponse updateComment(String ticketId, String commentId, String actorEmail,

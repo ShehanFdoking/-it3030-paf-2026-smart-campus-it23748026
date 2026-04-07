@@ -13,6 +13,7 @@ import com.paf.googleauth.catalog.model.ResourceCatalogItem;
 import com.paf.googleauth.catalog.model.ResourceCategory;
 import com.paf.googleauth.catalog.model.ResourceStatus;
 import com.paf.googleauth.catalog.repository.ResourceCatalogRepository;
+import com.paf.googleauth.notification.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,10 +32,13 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final ResourceCatalogRepository resourceCatalogRepository;
+    private final NotificationService notificationService;
 
-    public BookingService(BookingRepository bookingRepository, ResourceCatalogRepository resourceCatalogRepository) {
+    public BookingService(BookingRepository bookingRepository, ResourceCatalogRepository resourceCatalogRepository,
+            NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
         this.resourceCatalogRepository = resourceCatalogRepository;
+        this.notificationService = notificationService;
     }
 
     public BookingRequestResult requestBooking(BookingRequest request) {
@@ -157,6 +161,7 @@ public class BookingService {
     public BookingResponse updateBookingStatus(String id, BookingStatusUpdateRequest request) {
         BookingRecord booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
+        BookingStatus previousStatus = booking.getStatus();
 
         List<BookingRecord> linkedBookings = bookingRepository.findAllByParentBookingId(booking.getId());
 
@@ -183,6 +188,14 @@ public class BookingService {
         }
         if (!linkedBookings.isEmpty()) {
             bookingRepository.saveAll(linkedBookings);
+        }
+
+        if (previousStatus != request.status() && !booking.isSystemGenerated()) {
+            notificationService.notifyBookingStatus(
+                    booking.getRequesterEmail(),
+                    request.status().name(),
+                    booking.getId(),
+                    booking.getResourceName());
         }
 
         return toResponse(booking);

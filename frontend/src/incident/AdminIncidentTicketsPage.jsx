@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { addIncidentComment, listAdminIncidentTickets, updateIncidentTicket } from '../api';
 import { INCIDENT_STATUSES } from './incidentConfig';
 import { formatDateTime } from './incidentHelpers';
+import { openNotifications } from '../notification/notificationBus';
+import { requestConfirmation, showToast } from '../notification/notificationBus';
 
 function createEditor() {
   return {
@@ -87,13 +89,23 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
   };
 
   const closeTicket = async (ticketId) => {
-    try {
-      await updateIncidentTicket(ticketId, { status: 'CLOSED' });
-      setMessage('Ticket closed successfully');
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to close ticket');
-    }
+    requestConfirmation({
+      title: 'Close ticket?',
+      message: 'This will mark the ticket as CLOSED.',
+      confirmLabel: 'Close',
+      onConfirm: async () => {
+        try {
+          await updateIncidentTicket(ticketId, { status: 'CLOSED' });
+          setMessage('Ticket closed successfully');
+          showToast('Ticket closed successfully', 'success', 'Ticket closed');
+          await load();
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Unable to close ticket';
+          setError(errorMessage);
+          showToast(errorMessage, 'error', 'Close failed');
+        }
+      },
+    });
   };
 
   const rejectTicket = async (ticketId) => {
@@ -102,16 +114,26 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
       setError('Rejection reason is required');
       return;
     }
-    try {
-      await updateIncidentTicket(ticketId, {
-        status: 'REJECTED',
-        rejectionReason: payload.rejectionReason,
-      });
-      setMessage('Ticket rejected');
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to reject ticket');
-    }
+    requestConfirmation({
+      title: 'Reject ticket?',
+      message: 'This will mark the ticket as REJECTED.',
+      confirmLabel: 'Reject',
+      onConfirm: async () => {
+        try {
+          await updateIncidentTicket(ticketId, {
+            status: 'REJECTED',
+            rejectionReason: payload.rejectionReason,
+          });
+          setMessage('Ticket rejected');
+          showToast('Ticket rejected', 'success', 'Ticket updated');
+          await load();
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Unable to reject ticket';
+          setError(errorMessage);
+          showToast(errorMessage, 'error', 'Reject failed');
+        }
+      },
+    });
   };
 
   const addStaffComment = async (ticketId) => {
@@ -186,6 +208,9 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
             </button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/admin/profile')}>
               Profile
+            </button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+              Notifications
             </button>
             <button type="button" className="site-nav__link" onClick={onLogout}>
               Logout
@@ -263,7 +288,7 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
           const statusClass = getTicketStatusBadgeClass(ticket.status);
           const cardStatusClass = statusClass ? `admin-booking-group--${statusClass.replace('ticket-status--', '')}` : '';
           return (
-            <article key={ticket.id} className={`admin-booking-group ${cardStatusClass}`}>
+            <article key={ticket.id} className={`admin-booking-group ticket-card ${cardStatusClass}`}>
               <div className="ticket-card__header">
                 <h3>{ticket.resourceName} - {ticket.category}</h3>
                 <span className={`incident-badge ticket-status-badge ${statusClass}`}>

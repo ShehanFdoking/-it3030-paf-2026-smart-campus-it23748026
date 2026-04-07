@@ -1,4 +1,5 @@
 import { RESOURCE_CATEGORY_LIST } from './resourceConfig';
+import { openNotifications } from '../notification/notificationBus';
 
 export default function ResourceManagementPage({ navigate, onLogout }) {
   return (
@@ -27,6 +28,9 @@ export default function ResourceManagementPage({ navigate, onLogout }) {
             </button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/admin/profile')}>
               Profile
+            </button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+              Notifications
             </button>
             <button type="button" className="site-nav__link" onClick={onLogout}>
               Logout
