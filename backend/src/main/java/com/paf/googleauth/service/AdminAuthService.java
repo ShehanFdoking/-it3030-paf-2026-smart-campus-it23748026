@@ -11,20 +11,30 @@ public class AdminAuthService {
 
     private final String adminEmail;
     private String adminPassword;
+    private final String technicianEmail;
+    private final String technicianPassword;
 
     public AdminAuthService(
             @Value("${app.admin.email:admin@gmail.com}") String adminEmail,
-            @Value("${app.admin.default-password:admin123}") String adminPassword) {
+            @Value("${app.admin.default-password:admin123}") String adminPassword,
+            @Value("${app.technician.email:tech@gamil.com}") String technicianEmail,
+            @Value("${app.technician.default-password:tech123}") String technicianPassword) {
         this.adminEmail = adminEmail;
         this.adminPassword = adminPassword;
+        this.technicianEmail = technicianEmail;
+        this.technicianPassword = technicianPassword;
     }
 
     public synchronized AdminLoginResponse login(String email, String password) {
-        if (!adminEmail.equalsIgnoreCase(email) || !adminPassword.equals(password)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid admin email or password");
+        if (adminEmail.equalsIgnoreCase(email) && adminPassword.equals(password)) {
+            return new AdminLoginResponse("Administrator", adminEmail, true, "ADMIN");
         }
 
-        return new AdminLoginResponse("Administrator", adminEmail, true);
+        if (isTechnicianEmail(email) && technicianPassword.equals(password)) {
+            return new AdminLoginResponse("Technician", technicianEmail, false, "TECHNICIAN");
+        }
+
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
     }
 
     public synchronized void changePassword(String email, String currentPassword, String newPassword) {
@@ -43,5 +53,19 @@ public class AdminAuthService {
         }
 
         adminPassword = newPassword;
+    }
+
+    private boolean isTechnicianEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        String normalized = email.trim().toLowerCase();
+        if (technicianEmail.equalsIgnoreCase(normalized)) {
+            return true;
+        }
+
+        // Accept common typo variant as alias for smoother login.
+        return "tech@gmail.com".equalsIgnoreCase(normalized)
+                || "tech@gamil.com".equalsIgnoreCase(normalized);
     }
 }

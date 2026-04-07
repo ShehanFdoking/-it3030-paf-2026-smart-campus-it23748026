@@ -20,8 +20,14 @@ export default function App() {
   });
   const [adminMessage, setAdminMessage] = useState('');
 
+  const isTechnicianUser = (user) => {
+    const role = (user?.role || '').toUpperCase();
+    const email = (user?.email || '').toLowerCase();
+    return role === 'TECHNICIAN' || email === 'tech@gamil.com' || email === 'tech@gmail.com';
+  };
+
   function getRoute(pathname) {
-    const allowedRoutes = ['/', '/home', '/admin/dashboard', '/admin/profile'];
+    const allowedRoutes = ['/', '/home', '/admin/dashboard', '/admin/profile', '/tech/dashboard'];
     return allowedRoutes.includes(pathname) ? pathname : '/';
   }
 
@@ -72,9 +78,13 @@ export default function App() {
       setAdminUser(admin);
       setGoogleUser(null);
       setPasswordForm({ currentPassword: '', newPassword: '' });
-      navigate('/admin/dashboard');
+      if (isTechnicianUser(admin)) {
+        navigate('/tech/dashboard');
+      } else {
+        navigate('/admin/dashboard');
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Admin login failed');
+      setError(e instanceof Error ? e.message : 'Login failed');
       setAdminUser(null);
     } finally {
       setLoading(false);
@@ -202,6 +212,31 @@ export default function App() {
             <button type="button" onClick={() => navigate('/admin/profile')} className="btn btn--primary">
               Go to Profile
             </button>
+            <button type="button" onClick={handleLogout} className="btn btn--ghost">
+              Logout
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (route === '/tech/dashboard') {
+    const isTechnician = isTechnicianUser(adminUser);
+    return (
+      <main className="scene">
+        <section className="panel panel--content">
+          <h1 className="panel__title">Technician Dashboard</h1>
+          {!adminUser ? <p>Session not found. Please sign in again.</p> : null}
+          {adminUser && !isTechnician ? <p>Access denied. Only technician account can view this page.</p> : null}
+          {isTechnician ? (
+            <>
+              <p>Welcome to the technician dashboard.</p>
+              <p><strong>Name:</strong> {adminUser.name}</p>
+              <p><strong>Email:</strong> {adminUser.email}</p>
+            </>
+          ) : null}
+          <div className="actions-row">
             <button type="button" onClick={handleLogout} className="btn btn--ghost">
               Logout
             </button>
