@@ -13,6 +13,7 @@ import com.paf.googleauth.catalog.model.ResourceCatalogItem;
 import com.paf.googleauth.catalog.model.ResourceCategory;
 import com.paf.googleauth.catalog.model.ResourceStatus;
 import com.paf.googleauth.catalog.repository.ResourceCatalogRepository;
+import com.paf.googleauth.notification.dto.CreateNotificationRequest;
 import com.paf.googleauth.notification.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -74,6 +75,13 @@ public class BookingService {
             bookingRepository.save(linkedBooking);
         }
 
+        notifyRequesterOfBookingChange(
+            booking.getRequesterEmail(),
+            "Booking request submitted",
+            "Your booking for " + booking.getResourceName() + " is pending approval.",
+            booking.getId(),
+            booking.getResourceName());
+
         return new BookingRequestResult(true, "Booking request submitted. Current status: Pending.",
                 toResponse(booking), List.of());
     }
@@ -128,6 +136,13 @@ public class BookingService {
 
         syncLinkedBooking(booking);
 
+        notifyRequesterOfBookingChange(
+            booking.getRequesterEmail(),
+            "Booking updated",
+            "Your booking for " + booking.getResourceName() + " was updated.",
+            booking.getId(),
+            booking.getResourceName());
+
         return new BookingRequestResult(true, "Booking updated successfully.", toResponse(booking), List.of());
     }
 
@@ -144,6 +159,13 @@ public class BookingService {
         if (!linkedBookings.isEmpty()) {
             bookingRepository.deleteAll(linkedBookings);
         }
+
+        notifyRequesterOfBookingChange(
+                booking.getRequesterEmail(),
+                "Booking deleted",
+                "Your booking for " + booking.getResourceName() + " was deleted.",
+                booking.getId(),
+                booking.getResourceName());
     }
 
     public List<BookingResponse> listAdminBookings(ResourceCategory category, BookingStatus status, String search) {
@@ -228,6 +250,17 @@ public class BookingService {
             linked.setUpdatedAt(Instant.now());
         }
         bookingRepository.saveAll(linkedBookings);
+    }
+
+    private void notifyRequesterOfBookingChange(String recipientEmail, String title, String message,
+            String bookingId, String resourceName) {
+        notificationService.create(new CreateNotificationRequest(
+                recipientEmail,
+                title,
+                message,
+                "BOOKING",
+                "booking",
+                bookingId));
     }
 
     private boolean matchesSearch(BookingRecord record, String search) {
