@@ -412,6 +412,17 @@ body {
   box-shadow: 0 8px 20px rgba(15, 92, 204, 0.28);
 }
 
+.site-nav__link--notifications {
+  border-color: #86c5ff;
+  background: linear-gradient(120deg, #edf7ff, #dcefff);
+  color: #144c8d;
+}
+
+.site-nav__link--notifications:hover {
+  border-color: #5aa5ef;
+  background: linear-gradient(120deg, #e3f3ff, #cee5ff);
+}
+
 .user-nav {
   display: flex;
   gap: 8px;
@@ -1110,14 +1121,23 @@ body {
   gap: 12px;
 }
 
+.ticket-card {
+  position: relative;
+  padding-top: 18px;
+}
+
 .ticket-card__header h3 {
   margin: 0;
 }
 
 .ticket-status-badge {
-  margin-left: auto;
+  position: absolute;
+  top: 16px;
+  right: 16px;
   text-transform: uppercase;
   white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(26, 92, 166, 0.14);
+  border: 1px solid rgba(26, 92, 166, 0.12);
 }
 
 .ticket-status--open {
@@ -1126,18 +1146,18 @@ body {
 }
 
 .ticket-status--in-progress {
-  background: #fff3e6;
-  color: #b86100;
+  background: #ffd89a;
+  color: #7a4b00;
 }
 
 .ticket-status--resolved {
-  background: #e8f8ee;
-  color: #177245;
+  background: #7ee0a1;
+  color: #0f5f37;
 }
 
 .ticket-status--closed {
-  background: #edf0f5;
-  color: #4a5568;
+  background: #b9d5ee;
+  color: #27455f;
 }
 
 .ticket-status--rejected {
@@ -1157,13 +1177,13 @@ body {
 }
 
 .admin-booking-group--resolved {
-  background: #e8f8ee;
-  border-color: #8dd9ba;
+  background: #dff6e8;
+  border-color: #5fca87;
 }
 
 .admin-booking-group--closed {
-  background: #f0f5fc;
-  border-color: #c8d6f0;
+  background: #e1edf8;
+  border-color: #84afd9;
 }
 
 .admin-booking-group--rejected {

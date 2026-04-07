@@ -3,6 +3,8 @@ import { listAdminBookings, updateBookingStatus } from '../api';
 import { BOOKING_CATEGORY_OPTIONS, BOOKING_STATUS_OPTIONS } from './bookingConfig';
 import { mapBookingsByCategory } from './bookingHelpers';
 import { getLocationLabel, formatSublocationLabel } from '../catalog/resourceConfig';
+import { openNotifications } from '../notification/notificationBus';
+import { requestConfirmation, showToast } from '../notification/notificationBus';
 
 export default function AdminBookingsPage({ navigate, onLogout }) {
   const [bookings, setBookings] = useState([]);
@@ -42,16 +44,33 @@ export default function AdminBookingsPage({ navigate, onLogout }) {
     return mapBookingsByCategory(bookings);
   }, [bookings]);
 
-  const updateStatus = async (id, nextStatus) => {
-    setError('');
-    setMessage('');
-    try {
-      await updateBookingStatus(id, nextStatus);
-      setMessage(`Booking changed to ${nextStatus}`);
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Status update failed');
-    }
+  const updateStatus = (id, nextStatus) => {
+    const title = nextStatus === 'APPROVED' ? 'Approve booking?' : nextStatus === 'REJECTED' ? 'Reject booking?' : 'Reverse booking?';
+    const message = nextStatus === 'APPROVED'
+      ? 'This will approve the booking and notify the requester.'
+      : nextStatus === 'REJECTED'
+        ? 'This will reject the booking and notify the requester.'
+        : 'This will revert the booking back to pending.';
+
+    requestConfirmation({
+      title,
+      message,
+      confirmLabel: 'Continue',
+      onConfirm: async () => {
+        setError('');
+        setMessage('');
+        try {
+          await updateBookingStatus(id, nextStatus);
+          setMessage(`Booking changed to ${nextStatus}`);
+          showToast(`Booking ${nextStatus.toLowerCase()}`, 'success', 'Booking updated');
+          await load();
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Status update failed';
+          setError(errorMessage);
+          showToast(errorMessage, 'error', 'Booking update failed');
+        }
+      },
+    });
   };
 
   const renderGroup = (title, items) => (
@@ -149,6 +168,9 @@ export default function AdminBookingsPage({ navigate, onLogout }) {
             </button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/admin/profile')}>
               Profile
+            </button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+              Notifications
             </button>
             <button type="button" className="site-nav__link" onClick={onLogout}>
               Logout

@@ -3,6 +3,7 @@ import { createResource, deleteResource, listResources, updateResource } from '.
 import ResourceForm from './ResourceForm';
 import ResourceTable from './ResourceTable';
 import { getCategoryMeta } from './resourceConfig';
+import { requestConfirmation, showToast } from '../notification/notificationBus';
 
 export default function ResourceCategoryPage({ categorySlug, navigate, onBack }) {
   const meta = getCategoryMeta(categorySlug);
@@ -80,25 +81,30 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onBack })
     }
   };
 
-  const handleDelete = async (resource) => {
-    const confirmed = window.confirm(`Delete ${resource.name}?`);
-    if (!confirmed) {
-      return;
-    }
+  const handleDelete = (resource) => {
+    requestConfirmation({
+      title: `Delete ${resource.name}?`,
+      message: 'This resource will be permanently deleted.',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        setSaving(true);
+        setMessage('');
+        setError('');
 
-    setSaving(true);
-    setMessage('');
-    setError('');
-
-    try {
-      await deleteResource(resource.id);
-      setMessage(`${resource.name} deleted successfully`);
-      await loadResources();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to delete resource');
-    } finally {
-      setSaving(false);
-    }
+        try {
+          await deleteResource(resource.id);
+          setMessage(`${resource.name} deleted successfully`);
+          showToast(`${resource.name} deleted successfully`, 'success', 'Resource deleted');
+          await loadResources();
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Unable to delete resource';
+          setError(errorMessage);
+          showToast(errorMessage, 'error', 'Delete failed');
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
   };
 
   const handleEdit = (resource) => {

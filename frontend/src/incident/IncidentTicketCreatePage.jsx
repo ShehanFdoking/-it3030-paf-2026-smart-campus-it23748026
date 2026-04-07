@@ -3,6 +3,8 @@ import { createIncidentTicket, getResource } from '../api';
 import { INCIDENT_CATEGORIES, INCIDENT_PRIORITIES, getIncidentCategorySuggestions } from './incidentConfig';
 import { fileToDataUrl } from './incidentHelpers';
 import { formatSublocationLabel, getLocationLabel } from '../catalog/resourceConfig';
+import { openNotifications } from '../notification/notificationBus';
+import { showToast } from '../notification/notificationBus';
 
 export default function IncidentTicketCreatePage({ resourceId, bookingId, user, navigate, onLogout }) {
   const [resource, setResource] = useState(null);
@@ -102,9 +104,12 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
         preferredContact: form.preferredContact,
         attachments,
       });
+      showToast('Incident ticket created successfully.', 'success', 'Ticket created');
       navigate('/my-tickets');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create ticket');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create ticket';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Ticket creation failed');
     } finally {
       setSubmitting(false);
     }
@@ -132,6 +137,7 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
             <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
             <button type="button" className="site-nav__link is-active" onClick={() => navigate('/my-tickets')}>My Tickets</button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
             <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
           </div>
         </nav>

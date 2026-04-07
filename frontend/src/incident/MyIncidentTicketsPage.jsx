@@ -9,6 +9,8 @@ import {
 } from '../api';
 import { INCIDENT_PRIORITIES } from './incidentConfig';
 import { canEditOwnComment, formatDateTime } from './incidentHelpers';
+import { openNotifications } from '../notification/notificationBus';
+import { requestConfirmation, showToast } from '../notification/notificationBus';
 
 export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
   const [tickets, setTickets] = useState([]);
@@ -60,9 +62,12 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
         text,
       });
       setCommentTextByTicket((current) => ({ ...current, [ticketId]: '' }));
+      showToast('Comment added successfully', 'success', 'Comment added');
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Comment failed');
+      const errorMessage = err instanceof Error ? err.message : 'Comment failed';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Comment failed');
     }
   };
 
@@ -74,9 +79,12 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
     try {
       await updateIncidentComment(editingComment.ticketId, editingComment.commentId, user.email, { text: editingComment.text });
       setEditingComment({ ticketId: '', commentId: '', text: '' });
+      showToast('Comment updated successfully', 'success', 'Comment updated');
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to update comment');
+      const errorMessage = err instanceof Error ? err.message : 'Unable to update comment';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Comment update failed');
     }
   };
 
@@ -86,9 +94,12 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
     }
     try {
       await deleteIncidentComment(ticketId, commentId, user.email);
+      showToast('Comment deleted successfully', 'success', 'Comment deleted');
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to delete comment');
+      const errorMessage = err instanceof Error ? err.message : 'Unable to delete comment';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Comment delete failed');
     }
   };
 
@@ -124,10 +135,13 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
     try {
       await updateMyIncidentTicket(ticketId, user.email, ticketEditForm);
       setMessage('Ticket updated successfully');
+      showToast('Ticket updated successfully', 'success', 'Ticket updated');
       cancelTicketEdit();
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to update ticket');
+      const errorMessage = err instanceof Error ? err.message : 'Unable to update ticket';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Ticket update failed');
     }
   };
 
@@ -135,17 +149,23 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
     if (!user?.email) {
       return;
     }
-    if (!window.confirm('Delete this ticket? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      await deleteMyIncidentTicket(ticketId, user.email);
-      setMessage('Ticket deleted successfully');
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to delete ticket');
-    }
+    requestConfirmation({
+      title: 'Delete ticket?',
+      message: 'This action cannot be undone.',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        try {
+          await deleteMyIncidentTicket(ticketId, user.email);
+          setMessage('Ticket deleted successfully');
+          showToast('Ticket deleted successfully', 'success', 'Ticket deleted');
+          await load();
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Unable to delete ticket';
+          setError(errorMessage);
+          showToast(errorMessage, 'error', 'Delete failed');
+        }
+      },
+    });
   };
 
   const getTicketStatusBadgeClass = (status) => {
@@ -180,6 +200,7 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
             <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
             <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
             <button type="button" className="site-nav__link is-active" onClick={() => navigate('/my-tickets')}>My Tickets</button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
             <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
           </div>
         </nav>
@@ -192,7 +213,7 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
         {!loading && !tickets.length ? <p className="muted">No tickets yet.</p> : null}
 
         {tickets.map((ticket) => (
-          <article key={ticket.id} className={`admin-booking-group ${(() => {
+          <article key={ticket.id} className={`admin-booking-group ticket-card ${(() => {
             const statusClass = getTicketStatusBadgeClass(ticket.status);
             return statusClass ? `admin-booking-group--${statusClass.replace('ticket-status--', '')}` : '';
           })()}`}>

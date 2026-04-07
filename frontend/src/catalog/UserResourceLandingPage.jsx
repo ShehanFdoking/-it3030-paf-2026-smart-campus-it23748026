@@ -1,4 +1,5 @@
 import { RESOURCE_CATEGORY_LIST } from './resourceConfig';
+import { openNotifications } from '../notification/notificationBus';
 
 const CATEGORY_VISUAL = {
   'lecture-halls': { icon: '🏫', color: 'var(--user-visual-1)' },
@@ -21,6 +22,7 @@ export default function UserResourceLandingPage({ navigate, onBack, onLogout }) 
           <div className="site-nav__links">
             <button type="button" className="site-nav__link" onClick={onBack}>Home</button>
             <button type="button" className="site-nav__link is-active" onClick={() => navigate('/resources')}>Resources</button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
             <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
           </div>
         </nav>
