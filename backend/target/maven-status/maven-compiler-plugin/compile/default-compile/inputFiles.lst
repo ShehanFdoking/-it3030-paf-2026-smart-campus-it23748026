@@ -43,5 +43,12 @@ D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\model\TicketPri
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\model\TicketStatus.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\repository\IncidentTicketRepository.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\incident\service\IncidentTicketService.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\notification\controller\NotificationController.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\notification\dto\CreateNotificationRequest.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\notification\dto\MarkReadRequest.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\notification\dto\NotificationResponse.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\notification\model\Notification.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\notification\repository\NotificationRepository.java
+D:\PAF Project\backend\src\main\java\com\paf\googleauth\notification\service\NotificationService.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\service\AdminAuthService.java
 D:\PAF Project\backend\src\main\java\com\paf\googleauth\service\GoogleTokenService.java

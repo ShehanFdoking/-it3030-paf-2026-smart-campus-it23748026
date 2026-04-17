@@ -76,11 +76,11 @@ public class BookingService {
         }
 
         notifyRequesterOfBookingChange(
-            booking.getRequesterEmail(),
-            "Booking request submitted",
-            "Your booking for " + booking.getResourceName() + " is pending approval.",
-            booking.getId(),
-            booking.getResourceName());
+                booking.getRequesterEmail(),
+                "Booking request submitted",
+                "Your booking for " + booking.getResourceName() + " is pending approval.",
+                booking.getId(),
+                booking.getResourceName());
 
         return new BookingRequestResult(true, "Booking request submitted. Current status: Pending.",
                 toResponse(booking), List.of());
@@ -137,11 +137,11 @@ public class BookingService {
         syncLinkedBooking(booking);
 
         notifyRequesterOfBookingChange(
-            booking.getRequesterEmail(),
-            "Booking updated",
-            "Your booking for " + booking.getResourceName() + " was updated.",
-            booking.getId(),
-            booking.getResourceName());
+                booking.getRequesterEmail(),
+                "Booking updated",
+                "Your booking for " + booking.getResourceName() + " was updated.",
+                booking.getId(),
+                booking.getResourceName());
 
         return new BookingRequestResult(true, "Booking updated successfully.", toResponse(booking), List.of());
     }
