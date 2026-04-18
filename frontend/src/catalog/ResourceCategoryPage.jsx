@@ -3,9 +3,9 @@ import { createResource, deleteResource, listResources, updateResource } from '.
 import ResourceForm from './ResourceForm';
 import ResourceTable from './ResourceTable';
 import { getCategoryMeta } from './resourceConfig';
-import { requestConfirmation, showToast } from '../notification/notificationBus';
+import { openNotifications, requestConfirmation, showToast } from '../notification/notificationBus';
 
-export default function ResourceCategoryPage({ categorySlug, navigate, onBack }) {
+export default function ResourceCategoryPage({ categorySlug, navigate, onLogout }) {
   const meta = getCategoryMeta(categorySlug);
   const [resources, setResources] = useState([]);
   const [sortMode, setSortMode] = useState('NAME');
@@ -124,6 +124,39 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onBack })
   return (
     <main className="scene scene--admin">
       <section className="panel panel--content resource-page admin-panel">
+        <nav className="site-nav" aria-label="Admin navigation">
+          <div className="site-nav__brand">
+            <span className="site-nav__dot" aria-hidden="true" />
+            <div>
+              <p className="site-nav__kicker">Smart Campus</p>
+              <strong>Admin Portal</strong>
+            </div>
+          </div>
+          <div className="site-nav__links">
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/dashboard')}>
+              Dashboard
+            </button>
+            <button type="button" className="site-nav__link is-active" onClick={() => navigate('/admin/resources')}>
+              Resources
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/bookings')}>
+              Bookings
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/incidents')}>
+              Tickets
+            </button>
+            <button type="button" className="site-nav__link" onClick={() => navigate('/admin/profile')}>
+              Profile
+            </button>
+            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+              Notifications
+            </button>
+            <button type="button" className="site-nav__link" onClick={onLogout}>
+              Logout
+            </button>
+          </div>
+        </nav>
+
         <div className="resource-page__header">
           <div className="resource-page__meta">
             <p className="kicker">RESOURCE CATALOGUE</p>
@@ -149,10 +182,7 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onBack })
             </div>
           </div>
           <div className="actions-row actions-row--tight">
-            <button type="button" className="btn btn--ghost" onClick={() => navigate('/admin/resources')}>
-              Back to Resources
-            </button>
-            <button type="button" className="btn btn--primary" onClick={handleNew}>
+            <button type="button" className="btn btn--primary btn--add-resource" onClick={handleNew}>
               Add New {meta.itemLabel}
             </button>
           </div>
@@ -161,18 +191,6 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onBack })
         {message ? <p className="msg msg--success">{message}</p> : null}
         {error ? <p className="msg msg--error">{error}</p> : null}
         {loading ? <p className="muted">Loading resources...</p> : null}
-
-        {!loading && searchTerm.trim() && visibleResources.length === 0 ? (
-          <p className="muted">No matching resources found.</p>
-        ) : (
-          <ResourceTable
-            resources={visibleResources}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            busy={saving}
-            categorySlug={categorySlug}
-          />
-        )}
 
         {showForm ? (
           <div className="resource-form-shell">
@@ -188,6 +206,18 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onBack })
             />
           </div>
         ) : null}
+
+        {!loading && searchTerm.trim() && visibleResources.length === 0 ? (
+          <p className="muted">No matching resources found.</p>
+        ) : (
+          <ResourceTable
+            resources={visibleResources}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            busy={saving}
+            categorySlug={categorySlug}
+          />
+        )}
       </section>
     </main>
   );

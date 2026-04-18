@@ -17,7 +17,7 @@ public class AdminAuthService {
     public AdminAuthService(
             @Value("${app.admin.email:admin@gmail.com}") String adminEmail,
             @Value("${app.admin.default-password:admin123}") String adminPassword,
-            @Value("${app.technician.email:tech@gamil.com}") String technicianEmail,
+            @Value("${app.technician.email:tech@gmail.com}") String technicianEmail,
             @Value("${app.technician.default-password:tech123}") String technicianPassword) {
         this.adminEmail = adminEmail;
         this.adminPassword = adminPassword;
@@ -60,6 +60,8 @@ public class AdminAuthService {
             return false;
         }
         String normalized = email.trim().toLowerCase();
-        return technicianEmail.equalsIgnoreCase(normalized);
+        return technicianEmail.equalsIgnoreCase(normalized)
+                || "tech@gamil.com".equalsIgnoreCase(normalized)
+                || "tech@gmail.com".equalsIgnoreCase(normalized);
     }
 }

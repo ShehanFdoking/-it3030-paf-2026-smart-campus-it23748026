@@ -7,8 +7,9 @@ function uniqueSublocations(resources) {
   return ['ALL', ...new Set(resources.map((resource) => resource.sublocation))];
 }
 
-export default function UserResourceTypePage({ categorySlug, navigate, onLogout }) {
+export default function UserResourceTypePage({ user, categorySlug, navigate, onLogout }) {
   const meta = getCategoryMeta(categorySlug);
+  const displayName = user?.name || 'Campus User';
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -91,19 +92,30 @@ export default function UserResourceTypePage({ categorySlug, navigate, onLogout 
   return (
     <main className="scene scene--user">
       <section className="panel panel--content user-resource-detail">
-        <nav className="site-nav" aria-label="Main navigation">
-          <div className="site-nav__brand">
-            <span className="site-nav__dot" aria-hidden="true" />
-            <div>
-              <p className="site-nav__kicker">Smart Campus</p>
-              <strong>Resource Portal</strong>
-            </div>
+        <nav className="home-nav" aria-label="Main navigation">
+          <div className="home-nav__brand">
+            <span className="home-nav__dot" aria-hidden="true" />
+            <img src="/sliit-logo.png" alt="SLIIT" className="home-nav__logo" />
+            <strong>SLIIT</strong>
           </div>
-          <div className="site-nav__links">
-            <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
-            <button type="button" className="site-nav__link is-active" onClick={() => navigate('/resources')}>Resources</button>
-            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
-            <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
+          <div className="home-nav__links">
+            <button type="button" className="home-nav__link" onClick={() => navigate('/home')}>Home</button>
+            <button type="button" className="home-nav__link is-active" onClick={() => navigate('/resources')}>Resources</button>
+            <button type="button" className="home-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+            <button type="button" className="home-nav__link" onClick={() => navigate('/my-tickets')}>My Tickets</button>
+            <button type="button" className="home-nav__link" onClick={openNotifications}>Notifications</button>
+            <button type="button" className="home-nav__link" onClick={onLogout}>Logout</button>
+          </div>
+
+          <div className="home-nav__user" aria-label="Logged in user">
+            <span className="home-nav__user-name">{displayName}</span>
+            {user?.picture ? (
+              <img src={user.picture} alt={displayName} className="home-nav__user-avatar" />
+            ) : (
+              <span className="home-nav__user-fallback" aria-hidden="true">
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
         </nav>
 

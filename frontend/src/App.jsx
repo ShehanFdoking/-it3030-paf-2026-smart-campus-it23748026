@@ -1,7 +1,15 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { changeAdminPassword, loginAdmin, loginWithGoogle } from './api';
+import {
+  changeAdminPassword,
+  listAdminBookings,
+  listAdminIncidentTickets,
+  listResources,
+  loginAdmin,
+  loginWithGoogle,
+  updateBookingStatus,
+} from './api';
 import ResourceCategoryPage from './catalog/ResourceCategoryPage';
 import AdminBookingsPage from './booking/AdminBookingsPage';
 import ResourceManagementPage from './catalog/ResourceManagementPage';
@@ -18,7 +26,6 @@ import { openNotifications } from './notification/notificationBus';
 import './App.css';
 
 export default function App() {
-  const TECHNICIAN_EMAIL = 'tech@gamil.com';
   const ADMIN_SESSION_KEY = 'adminUserSession';
   const GOOGLE_SESSION_KEY = 'googleUserSession';
   const [googleUser, setGoogleUser] = useState(() => {
@@ -49,11 +56,23 @@ export default function App() {
     newPassword: '',
   });
   const [adminMessage, setAdminMessage] = useState('');
+  const [adminSummary, setAdminSummary] = useState({
+    totalResources: 0,
+    totalBookings: 0,
+    totalIncidents: 0,
+    pendingBookings: 0,
+    activeIncidents: 0,
+    resolvedIncidents: 0,
+  });
+  const [adminSummaryLoading, setAdminSummaryLoading] = useState(false);
+  const [adminSummaryError, setAdminSummaryError] = useState('');
+  const [adminBookingsData, setAdminBookingsData] = useState([]);
+  const [adminIncidentsData, setAdminIncidentsData] = useState([]);
+  const [adminActionBusy, setAdminActionBusy] = useState('');
 
   const isTechnicianUser = (user) => {
     const role = (user?.role || '').toUpperCase();
-    const email = (user?.email || '').toLowerCase();
-    return role === 'TECHNICIAN' && email === TECHNICIAN_EMAIL;
+    return role === 'TECHNICIAN';
   };
 
   function getRoute(pathname) {
@@ -110,6 +129,132 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  useEffect(() => {
+    const shouldLoadSummary =
+      route === '/admin/dashboard' &&
+      !!adminUser &&
+      String(adminUser?.role || '').toUpperCase() === 'ADMIN';
+
+    if (!shouldLoadSummary) {
+      return;
+    }
+
+    let isActive = true;
+
+    const loadAdminSummary = async () => {
+      setAdminSummaryLoading(true);
+      setAdminSummaryError('');
+
+      try {
+        const [resources, bookings, incidents] = await Promise.all([
+          listResources(),
+          listAdminBookings({}),
+          listAdminIncidentTickets({}),
+        ]);
+
+        if (!isActive) {
+          return;
+        }
+
+        const pendingBookings = bookings.filter((booking) => booking.status === 'PENDING').length;
+        const activeIncidents = incidents.filter((ticket) => ticket.status === 'OPEN' || ticket.status === 'IN_PROGRESS').length;
+        const resolvedIncidents = incidents.filter((ticket) => ticket.status === 'RESOLVED' || ticket.status === 'CLOSED').length;
+
+        setAdminBookingsData(bookings);
+        setAdminIncidentsData(incidents);
+
+        setAdminSummary({
+          totalResources: resources.length,
+          totalBookings: bookings.length,
+          totalIncidents: incidents.length,
+          pendingBookings,
+          activeIncidents,
+          resolvedIncidents,
+        });
+      } catch (e) {
+        if (!isActive) {
+          return;
+        }
+
+        setAdminSummaryError(e instanceof Error ? e.message : 'Failed to load admin summary');
+      } finally {
+        if (isActive) {
+          setAdminSummaryLoading(false);
+        }
+      }
+    };
+
+    loadAdminSummary();
+
+    return () => {
+      isActive = false;
+    };
+  }, [route, adminUser]);
+
+  const formatShortDate = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const toDateOnlyValue = (value) => {
+    if (!value) {
+      return null;
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const buildLast7Days = () => {
+    const days = [];
+    const current = new Date();
+    current.setHours(0, 0, 0, 0);
+
+    for (let offset = 6; offset >= 0; offset -= 1) {
+      const day = new Date(current);
+      day.setDate(current.getDate() - offset);
+      const key = day.toISOString().slice(0, 10);
+      days.push({ key, label: day.toLocaleDateString('en-US', { weekday: 'short' }) });
+    }
+
+    return days;
+  };
+
+  const handleDashboardBookingAction = async (bookingId, nextStatus) => {
+    setAdminActionBusy(`${bookingId}:${nextStatus}`);
+
+    try {
+      await updateBookingStatus(bookingId, nextStatus);
+      const [bookings, incidents] = await Promise.all([
+        listAdminBookings({}),
+        listAdminIncidentTickets({}),
+      ]);
+
+      setAdminBookingsData(bookings);
+      setAdminIncidentsData(incidents);
+      setAdminSummary((current) => ({
+        ...current,
+        totalBookings: bookings.length,
+        totalIncidents: incidents.length,
+        pendingBookings: bookings.filter((booking) => booking.status === 'PENDING').length,
+        activeIncidents: incidents.filter((ticket) => ticket.status === 'OPEN' || ticket.status === 'IN_PROGRESS').length,
+        resolvedIncidents: incidents.filter((ticket) => ticket.status === 'RESOLVED' || ticket.status === 'CLOSED').length,
+      }));
+    } catch (e) {
+      setAdminSummaryError(e instanceof Error ? e.message : 'Failed to update booking status');
+    } finally {
+      setAdminActionBusy('');
+    }
+  };
 
   const handleSuccess = async (credentialResponse) => {
     if (!credentialResponse.credential) {
@@ -198,67 +343,83 @@ export default function App() {
 
   if (route === '/home') {
     return (
-      <main className="scene">
-        <section className="panel panel--content">
-          <nav className="site-nav" aria-label="Main navigation">
-            <div className="site-nav__brand">
-              <span className="site-nav__dot" aria-hidden="true" />
-              <div>
-                <p className="site-nav__kicker">Smart Campus</p>
-                <strong>Resource Portal</strong>
-              </div>
+      <main className="home-scene">
+        <section className="home-shell">
+          <nav className="home-nav" aria-label="Main navigation">
+            <div className="home-nav__brand">
+              <span className="home-nav__dot" aria-hidden="true" />
+              <img src="/sliit-logo.png" alt="SLIIT" className="home-nav__logo" />
+              <strong>SLIIT</strong>
             </div>
-            <div className="site-nav__links">
-              <button type="button" className="site-nav__link is-active" onClick={() => navigate('/home')}>
+            <div className="home-nav__links">
+              <button type="button" className="home-nav__link is-active" onClick={() => navigate('/home')}>
                 Home
               </button>
-              <button type="button" className="site-nav__link" onClick={() => navigate('/resources')}>
+              <button type="button" className="home-nav__link" onClick={() => navigate('/resources')}>
                 Resources
               </button>
-              <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>
+              <button type="button" className="home-nav__link" onClick={() => navigate('/my-bookings')}>
                 My Bookings
               </button>
-              <button type="button" className="site-nav__link" onClick={() => navigate('/my-tickets')}>
+              <button type="button" className="home-nav__link" onClick={() => navigate('/my-tickets')}>
                 My Tickets
               </button>
-              <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>
+              <button type="button" className="home-nav__link" onClick={openNotifications}>
                 Notifications
               </button>
-              <button type="button" className="site-nav__link" onClick={handleLogout}>
+              <button type="button" className="home-nav__link" onClick={handleLogout}>
                 Logout
               </button>
             </div>
+
+            <div className="home-nav__user" aria-label="Logged in user">
+              <span className="home-nav__user-name">{googleUser?.name || 'Campus User'}</span>
+              {googleUser?.picture ? (
+                <img src={googleUser.picture} alt={googleUser?.name || 'User'} className="home-nav__user-avatar" />
+              ) : (
+                <span className="home-nav__user-fallback" aria-hidden="true">
+                  {(googleUser?.name || 'U').charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
           </nav>
-          <h1 className="panel__title">Home Page</h1>
-          {!googleUser ? (
-            <p>Login session is not available. Please go back and sign in again.</p>
-          ) : (
-            <>
-              <p>Welcome to the home page.</p>
-              <p><strong>Name:</strong> {googleUser.name}</p>
-              <p><strong>Email:</strong> {googleUser.email}</p>
-              {googleUser.picture ? <img src={googleUser.picture} alt="profile" width="72" height="72" className="avatar" /> : null}
-            </>
-          )}
+
+          <section className="home-hero">
+            <div className="home-hero__content">
+              <p className="home-hero__kicker">RESOURCE MANAGEMENT PORTAL</p>
+              <h1 className="home-hero__title">
+                <span className="home-hero__line">NAVIGATE YOUR</span>
+                <span className="home-hero__line home-hero__line--accent">CAMPUS LIFE.</span>
+                <span className="home-hero__line home-hero__line--compact">SMART, SIMPLE, SEAMLESS.</span>
+              </h1>
+              <p className="home-hero__text">
+                Manage campus resources in one place. Book lecture halls, meeting rooms, and equipment faster while tracking tickets and notifications in real time.
+              </p>
+
+            </div>
+
+            <div className="home-hero__image-panel" aria-label="Graduate hero image" />
+
+          </section>
         </section>
       </main>
     );
   }
 
   if (route === '/resources') {
-    return <UserResourceLandingPage navigate={navigate} onBack={() => navigate('/home')} onLogout={handleLogout} />;
+    return <UserResourceLandingPage user={googleUser} navigate={navigate} onBack={() => navigate('/home')} onLogout={handleLogout} />;
   }
 
   if (route === '/resources/lecture-halls') {
-    return <UserResourceTypePage categorySlug="lecture-halls" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
+    return <UserResourceTypePage user={googleUser} categorySlug="lecture-halls" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
   }
 
   if (route === '/resources/meeting-rooms') {
-    return <UserResourceTypePage categorySlug="meeting-rooms" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
+    return <UserResourceTypePage user={googleUser} categorySlug="meeting-rooms" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
   }
 
   if (route === '/resources/equipment') {
-    return <UserResourceTypePage categorySlug="equipment" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
+    return <UserResourceTypePage user={googleUser} categorySlug="equipment" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
   }
 
   if (route === '/my-bookings') {
@@ -373,6 +534,64 @@ export default function App() {
   }
 
   if (route === '/admin/dashboard') {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const urgentPendingBookings = adminBookingsData
+      .filter((booking) => booking.status === 'PENDING')
+      .filter((booking) => {
+        const bookingDay = toDateOnlyValue(booking.bookingDate);
+        if (!bookingDay) {
+          return false;
+        }
+        const diffDays = Math.floor((bookingDay.getTime() - now.getTime()) / 86400000);
+        return diffDays <= 1;
+      })
+      .slice(0, 5);
+
+    const urgentUnassignedIncidents = adminIncidentsData
+      .filter((ticket) => ticket.status === 'OPEN' && !ticket.assignedTechnicianEmail)
+      .slice(0, 5);
+
+    const approvalItems = adminBookingsData
+      .filter((booking) => booking.status === 'PENDING')
+      .slice(0, 6);
+
+    const trendDays = buildLast7Days();
+    const bookingTrendMap = trendDays.reduce((acc, day) => ({ ...acc, [day.key]: 0 }), {});
+    const incidentTrendMap = trendDays.reduce((acc, day) => ({ ...acc, [day.key]: 0 }), {});
+
+    adminBookingsData.forEach((booking) => {
+      const date = toDateOnlyValue(booking.bookingDate);
+      if (!date) {
+        return;
+      }
+      const key = date.toISOString().slice(0, 10);
+      if (Object.prototype.hasOwnProperty.call(bookingTrendMap, key)) {
+        bookingTrendMap[key] += 1;
+      }
+    });
+
+    adminIncidentsData.forEach((ticket) => {
+      const date = toDateOnlyValue(ticket.createdAt);
+      if (!date) {
+        return;
+      }
+      const key = date.toISOString().slice(0, 10);
+      if (Object.prototype.hasOwnProperty.call(incidentTrendMap, key)) {
+        incidentTrendMap[key] += 1;
+      }
+    });
+
+    const trendRows = trendDays.map((day) => ({
+      label: day.label,
+      key: day.key,
+      bookings: bookingTrendMap[day.key],
+      incidents: incidentTrendMap[day.key],
+    }));
+
+    const maxTrendValue = Math.max(1, ...trendRows.map((row) => Math.max(row.bookings, row.incidents)));
+
     return (
       <main className="scene scene--admin">
         <section className="panel panel--content admin-panel">
@@ -410,24 +629,147 @@ export default function App() {
           </nav>
           <h1 className="panel__title">Admin Dashboard</h1>
           {!adminUser ? <p>Admin session not found. Please sign in again.</p> : <p>Welcome to the admin dashboard.</p>}
+          {adminSummaryLoading ? <p className="muted">Loading admin summary...</p> : null}
+          {adminSummaryError ? <p className="msg msg--error">{adminSummaryError}</p> : null}
 
-          <div className="actions-row">
-            <button type="button" onClick={() => navigate('/admin/resources')} className="btn btn--primary">
-              Resource Management
-            </button>
-            <button type="button" onClick={() => navigate('/admin/bookings')} className="btn btn--primary">
-              Booking Management
-            </button>
-            <button type="button" onClick={() => navigate('/admin/incidents')} className="btn btn--primary">
-              Incident Tickets
-            </button>
-            <button type="button" onClick={() => navigate('/admin/profile')} className="btn btn--primary">
-              Go to Profile
-            </button>
-            <button type="button" onClick={handleLogout} className="btn btn--ghost">
-              Logout
-            </button>
-          </div>
+          {!adminSummaryLoading && !adminSummaryError ? (
+            <>
+              <div className="resource-cards admin-dashboard-summary" aria-label="Admin work summary">
+                <article className="resource-card" style={{ cursor: 'default' }}>
+                  <p className="resource-card__tag">Resources</p>
+                  <h2>{adminSummary.totalResources}</h2>
+                  <p>Total managed resources</p>
+                </article>
+                <article className="resource-card" style={{ cursor: 'default' }}>
+                  <p className="resource-card__tag">Bookings</p>
+                  <h2>{adminSummary.totalBookings}</h2>
+                  <p>All booking records</p>
+                </article>
+                <article className="resource-card" style={{ cursor: 'default' }}>
+                  <p className="resource-card__tag">Pending Bookings</p>
+                  <h2>{adminSummary.pendingBookings}</h2>
+                  <p>Awaiting admin action</p>
+                </article>
+                <article className="resource-card" style={{ cursor: 'default' }}>
+                  <p className="resource-card__tag">Incident Tickets</p>
+                  <h2>{adminSummary.totalIncidents}</h2>
+                  <p>All submitted incidents</p>
+                </article>
+                <article className="resource-card" style={{ cursor: 'default' }}>
+                  <p className="resource-card__tag">Active Incidents</p>
+                  <h2>{adminSummary.activeIncidents}</h2>
+                  <p>Open and in-progress tickets</p>
+                </article>
+                <article className="resource-card" style={{ cursor: 'default' }}>
+                  <p className="resource-card__tag">Resolved</p>
+                  <h2>{adminSummary.resolvedIncidents}</h2>
+                  <p>Resolved or closed tickets</p>
+                </article>
+              </div>
+
+              <div className="admin-dashboard-grid">
+                <section className="admin-dashboard-panel" aria-label="Urgent queue">
+                  <h2>Urgent Queue</h2>
+                  <p className="admin-dashboard-panel__hint">Items that need immediate admin attention.</p>
+
+                  <div className="admin-dashboard-list">
+                    {urgentPendingBookings.map((booking) => (
+                      <article key={booking.id} className="admin-dashboard-list__item">
+                        <div>
+                          <strong>{booking.resourceName}</strong>
+                          <p>{booking.userName} - {formatShortDate(booking.bookingDate)}</p>
+                        </div>
+                        <span className="status-pill admin-status-pill admin-status-pill--pending">PENDING</span>
+                      </article>
+                    ))}
+
+                    {urgentUnassignedIncidents.map((ticket) => (
+                      <article key={ticket.id} className="admin-dashboard-list__item">
+                        <div>
+                          <strong>{ticket.resourceName}</strong>
+                          <p>{ticket.reporterName} - Unassigned</p>
+                        </div>
+                        <span className="incident-badge ticket-status-badge ticket-status--open">OPEN</span>
+                      </article>
+                    ))}
+
+                    {!urgentPendingBookings.length && !urgentUnassignedIncidents.length ? (
+                      <p className="muted">No urgent items right now.</p>
+                    ) : null}
+                  </div>
+                </section>
+
+                <section className="admin-dashboard-panel" aria-label="Approval center">
+                  <h2>Approval Center</h2>
+                  <p className="admin-dashboard-panel__hint">Approve or reject pending bookings quickly.</p>
+
+                  <div className="admin-dashboard-list">
+                    {approvalItems.map((booking) => {
+                      const approveBusy = adminActionBusy === `${booking.id}:APPROVED`;
+                      const rejectBusy = adminActionBusy === `${booking.id}:REJECTED`;
+                      const isBusy = approveBusy || rejectBusy;
+
+                      return (
+                        <article key={booking.id} className="admin-dashboard-list__item admin-dashboard-list__item--actions">
+                          <div>
+                            <strong>{booking.resourceName}</strong>
+                            <p>{booking.userName} - {formatShortDate(booking.bookingDate)}</p>
+                          </div>
+                          <div className="table-actions">
+                            <button
+                              type="button"
+                              className="btn btn--ghost btn--compact admin-action-btn"
+                              onClick={() => handleDashboardBookingAction(booking.id, 'APPROVED')}
+                              disabled={isBusy}
+                            >
+                              {approveBusy ? 'Approving...' : 'Approve'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn--ghost btn--compact admin-action-btn"
+                              onClick={() => handleDashboardBookingAction(booking.id, 'REJECTED')}
+                              disabled={isBusy}
+                            >
+                              {rejectBusy ? 'Rejecting...' : 'Reject'}
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+
+                    {!approvalItems.length ? <p className="muted">No pending approvals.</p> : null}
+                  </div>
+                </section>
+
+                <section className="admin-dashboard-panel admin-dashboard-panel--full" aria-label="7 day trend charts">
+                  <h2>7-day Trend Charts</h2>
+                  <p className="admin-dashboard-panel__hint">Daily booking and incident volumes for the last seven days.</p>
+
+                  <div className="admin-trend-chart" role="img" aria-label="Bookings and incidents trend for the last seven days">
+                    {trendRows.map((row) => {
+                      const bookingHeight = Math.max(8, Math.round((row.bookings / maxTrendValue) * 90));
+                      const incidentHeight = Math.max(8, Math.round((row.incidents / maxTrendValue) * 90));
+
+                      return (
+                        <div key={row.key} className="admin-trend-chart__day">
+                          <div className="admin-trend-chart__bars">
+                            <span className="admin-trend-chart__bar admin-trend-chart__bar--bookings" style={{ height: `${bookingHeight}px` }} title={`Bookings: ${row.bookings}`} />
+                            <span className="admin-trend-chart__bar admin-trend-chart__bar--incidents" style={{ height: `${incidentHeight}px` }} title={`Incidents: ${row.incidents}`} />
+                          </div>
+                          <span className="admin-trend-chart__label">{row.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="admin-trend-chart__legend">
+                    <span><i className="admin-trend-chart__dot admin-trend-chart__dot--bookings" /> Bookings</span>
+                    <span><i className="admin-trend-chart__dot admin-trend-chart__dot--incidents" /> Incidents</span>
+                  </div>
+                </section>
+              </div>
+            </>
+          ) : null}
         </section>
       </main>
     );
@@ -438,15 +780,15 @@ export default function App() {
   }
 
   if (route === '/admin/resources/lecture-halls') {
-    return <ResourceCategoryPage categorySlug="lecture-halls" navigate={navigate} onBack={() => navigate('/admin/resources')} onLogout={handleLogout} />;
+    return <ResourceCategoryPage categorySlug="lecture-halls" navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/resources/meeting-rooms') {
-    return <ResourceCategoryPage categorySlug="meeting-rooms" navigate={navigate} onBack={() => navigate('/admin/resources')} onLogout={handleLogout} />;
+    return <ResourceCategoryPage categorySlug="meeting-rooms" navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/resources/equipment') {
-    return <ResourceCategoryPage categorySlug="equipment" navigate={navigate} onBack={() => navigate('/admin/resources')} onLogout={handleLogout} />;
+    return <ResourceCategoryPage categorySlug="equipment" navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/bookings') {
@@ -547,18 +889,6 @@ export default function App() {
           {error ? <p className="msg msg--error">{error}</p> : null}
         </div>
 
-        <aside className="login-visual-side">
-          <div className="visual-card">
-            <p className="visual-head">Ready to work?</p>
-            <h2>Smart campus tools are waiting for your login.</h2>
-            <div className="visual-art">
-              <div className="orb orb--one" />
-              <div className="orb orb--two" />
-              <div className="person-silhouette" />
-            </div>
-          </div>
-          <div className="spark">✦</div>
-        </aside>
       </section>
     </main>
   );

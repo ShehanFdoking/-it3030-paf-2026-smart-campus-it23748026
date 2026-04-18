@@ -90,10 +90,6 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
             <h1 className="panel__title">Resolved Tickets</h1>
             <p className="subtitle">Review old tickets that you resolved or closed after resolution.</p>
           </div>
-          <div className="actions-row actions-row--tight">
-            <button type="button" className="btn btn--ghost" onClick={loadResolvedTickets}>Refresh</button>
-            <button type="button" className="btn btn--ghost" onClick={onLogout}>Logout</button>
-          </div>
         </div>
 
         <div className="resource-cards" style={{ marginTop: 10 }}>

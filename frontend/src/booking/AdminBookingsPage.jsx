@@ -144,7 +144,7 @@ export default function AdminBookingsPage({ navigate, onLogout }) {
 
   return (
     <main className="scene scene--admin">
-      <section className="panel panel--content admin-panel">
+      <section className="panel panel--content admin-panel admin-bookings-page">
         <nav className="site-nav" aria-label="Admin navigation">
           <div className="site-nav__brand">
             <span className="site-nav__dot" aria-hidden="true" />
@@ -200,10 +200,6 @@ export default function AdminBookingsPage({ navigate, onLogout }) {
                 <input className="input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by user, resource, location, code" />
               </label>
             </div>
-          </div>
-          <div className="actions-row actions-row--tight">
-            <button type="button" className="btn btn--ghost" onClick={load}>Refresh</button>
-            <button type="button" className="btn btn--ghost" onClick={() => navigate('/admin/dashboard')}>Back to Dashboard</button>
           </div>
         </div>
 
