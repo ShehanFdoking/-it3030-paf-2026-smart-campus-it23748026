@@ -236,9 +236,6 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
               </label>
             </div>
           </div>
-          <div className="actions-row actions-row--tight">
-            <button type="button" className="btn btn--ghost" onClick={load}>Refresh</button>
-          </div>
         </div>
 
         <div className="resource-cards" style={{ marginTop: 10 }}>

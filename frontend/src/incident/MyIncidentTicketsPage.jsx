@@ -13,6 +13,8 @@ import { openNotifications } from '../notification/notificationBus';
 import { requestConfirmation, showToast } from '../notification/notificationBus';
 
 export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
+  const displayName = user?.name || 'Campus User';
+  const avatarUrl = user?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=111111&color=fff`;
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -187,25 +189,37 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
 
   return (
     <main className="scene scene--user">
-      <section className="panel panel--content user-resource-detail">
-        <nav className="site-nav" aria-label="Main navigation">
-          <div className="site-nav__brand">
-            <span className="site-nav__dot" aria-hidden="true" />
-            <div>
-              <p className="site-nav__kicker">Smart Campus</p>
-              <strong>My Tickets</strong>
-            </div>
+      <section className="panel panel--content user-resource-detail user-incident-page">
+        <nav className="home-nav" aria-label="Main navigation">
+          <div className="home-nav__brand">
+            <span className="home-nav__dot" aria-hidden="true" />
+            <img src="/sliit-logo.png" alt="SLIIT" className="home-nav__logo" />
+            <strong>SLIIT</strong>
           </div>
-          <div className="site-nav__links">
-            <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
-            <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
-            <button type="button" className="site-nav__link is-active" onClick={() => navigate('/my-tickets')}>My Tickets</button>
-            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
-            <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
+          <div className="home-nav__links">
+            <button type="button" className="home-nav__link" onClick={() => navigate('/home')}>Home</button>
+            <button type="button" className="home-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+            <button type="button" className="home-nav__link is-active" onClick={() => navigate('/my-tickets')}>My Tickets</button>
+            <button type="button" className="home-nav__link" onClick={openNotifications}>Notifications</button>
+            <button type="button" className="home-nav__link" onClick={onLogout}>Logout</button>
+          </div>
+          <div className="home-nav__user" aria-label="Logged in user">
+            <span className="home-nav__user-name">{displayName}</span>
+            {user?.picture ? (
+              <img src={avatarUrl} alt={displayName} className="home-nav__user-avatar" />
+            ) : (
+              <span className="home-nav__user-fallback" aria-hidden="true">
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
         </nav>
 
-        <h1 className="panel__title">My Incident Tickets</h1>
+        <section className="user-hero user-hero--compact">
+          <p className="user-hero__kicker">INCIDENT TRACKER</p>
+          <h1 className="panel__title">My Incident Tickets</h1>
+          <p className="subtitle">Monitor ticket progress, update details, and communicate through comments.</p>
+        </section>
         {loading ? <p className="muted">Loading tickets...</p> : null}
         {message ? <p className="msg msg--success">{message}</p> : null}
         {error ? <p className="msg msg--error">{error}</p> : null}

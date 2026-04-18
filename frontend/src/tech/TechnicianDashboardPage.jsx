@@ -104,10 +104,6 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
             <h1 className="panel__title">In-Progress Tickets</h1>
             <p className="subtitle">View and manage all active incident tickets.</p>
           </div>
-          <div className="actions-row actions-row--tight">
-            <button type="button" className="btn btn--ghost" onClick={loadInProgressTickets}>Refresh</button>
-            <button type="button" className="btn btn--ghost" onClick={onLogout}>Logout</button>
-          </div>
         </div>
 
         <div className="resource-cards" style={{ marginTop: 10 }}>

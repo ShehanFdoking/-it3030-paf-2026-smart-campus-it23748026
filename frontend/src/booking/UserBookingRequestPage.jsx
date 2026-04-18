@@ -15,6 +15,8 @@ function getTodayDateString() {
 export default function UserBookingRequestPage({ categorySlug, resourceId, user, navigate, onLogout }) {
   const meta = getCategoryMeta(categorySlug);
   const minDate = getTodayDateString();
+  const displayName = user?.name || 'Campus User';
+  const avatarUrl = user?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=111111&color=fff`;
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -102,39 +104,53 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
 
   return (
     <main className="scene scene--user">
-      <section className="panel panel--content user-resource-detail">
-        <nav className="site-nav" aria-label="Main navigation">
-          <div className="site-nav__brand">
-            <span className="site-nav__dot" aria-hidden="true" />
-            <div>
-              <p className="site-nav__kicker">Smart Campus</p>
-              <strong>Booking Portal</strong>
-            </div>
+      <section className="panel panel--content user-resource-detail booking-request-page">
+        <nav className="home-nav" aria-label="Main navigation">
+          <div className="home-nav__brand">
+            <span className="home-nav__dot" aria-hidden="true" />
+            <img src="/sliit-logo.png" alt="SLIIT" className="home-nav__logo" />
+            <strong>SLIIT</strong>
           </div>
-          <div className="site-nav__links">
-            <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
-            <button type="button" className="site-nav__link" onClick={() => navigate('/resources')}>Resources</button>
-            <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
-            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
-            <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
+          <div className="home-nav__links">
+            <button type="button" className="home-nav__link" onClick={() => navigate('/home')}>Home</button>
+            <button type="button" className="home-nav__link" onClick={() => navigate('/resources')}>Resources</button>
+            <button type="button" className="home-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+            <button type="button" className="home-nav__link" onClick={() => navigate('/my-tickets')}>My Tickets</button>
+            <button type="button" className="home-nav__link" onClick={openNotifications}>Notifications</button>
+            <button type="button" className="home-nav__link" onClick={onLogout}>Logout</button>
+          </div>
+          <div className="home-nav__user" aria-label="Logged in user">
+            <span className="home-nav__user-name">{displayName}</span>
+            {user?.picture ? (
+              <img src={avatarUrl} alt={displayName} className="home-nav__user-avatar" />
+            ) : (
+              <span className="home-nav__user-fallback" aria-hidden="true">
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
         </nav>
 
-        <h1 className="panel__title">Book {meta.itemLabel}</h1>
+        <section className="user-hero user-hero--compact">
+          <p className="user-hero__kicker">BOOKING REQUEST</p>
+          <h1 className="panel__title">Book {meta.itemLabel}</h1>
+          <p className="subtitle">Complete the details below to submit your booking request.</p>
+        </section>
 
         {loading ? <p className="muted">Loading resource details...</p> : null}
 
-        {resource ? (
-          <div className="user-booking-card">
-            <p><strong>Resource:</strong> {resource.name}</p>
-            <p><strong>Location:</strong> {getLocationLabel(resource.location)} / {formatSublocationLabel(resource.sublocation)}</p>
-            <p><strong>Capacity:</strong> {resource.capacity}</p>
-            {resource.relatedResourceName ? <p><strong>Linked Room:</strong> {resource.relatedResourceName}</p> : null}
-          </div>
-        ) : null}
+        <div className="booking-form-card">
+          {resource ? (
+            <div className="user-booking-card">
+              <p><strong>Resource:</strong> {resource.name}</p>
+              <p><strong>Location:</strong> {getLocationLabel(resource.location)} / {formatSublocationLabel(resource.sublocation)}</p>
+              <p><strong>Capacity:</strong> {resource.capacity}</p>
+              {resource.relatedResourceName ? <p><strong>Linked Room:</strong> {resource.relatedResourceName}</p> : null}
+            </div>
+          ) : null}
 
-        <form className="resource-form" onSubmit={handleSubmit}>
-          <div className="resource-grid">
+          <form className="resource-form resource-form--booking" onSubmit={handleSubmit}>
+            <div className="resource-grid">
             <label className="resource-field">
               <span>Date<span className="required-mark">*</span></span>
               <input className="input" type="date" min={minDate} value={form.bookingDate} onChange={(event) => updateField('bookingDate', event.target.value)} required />
@@ -173,13 +189,14 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
                 <input className="input" value={form.linkedRoomApprovalCode} onChange={(event) => updateField('linkedRoomApprovalCode', event.target.value)} placeholder="Optional proof code" />
               </label>
             ) : null}
-          </div>
+            </div>
 
-          <div className="actions-row">
-            <button className="btn btn--primary" type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Book'}</button>
-            <button className="btn btn--ghost" type="button" onClick={() => navigate(`/resources/${categorySlug}`)}>Back</button>
-          </div>
-        </form>
+            <div className="actions-row">
+              <button className="btn btn--primary" type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Book'}</button>
+              <button className="btn btn--ghost" type="button" onClick={() => navigate(`/resources/${categorySlug}`)}>Back</button>
+            </div>
+          </form>
+        </div>
 
         {message ? <p className="msg msg--success">{message}</p> : null}
         {error ? <p className="msg msg--error">{error}</p> : null}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Toast from './Toast';
 import ConfirmDialog from './ConfirmDialog';
 import NotificationPanel from './NotificationPanel';
@@ -130,8 +130,6 @@ export default function NotificationsShell() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const hasUser = useMemo(() => !!recipientEmail, [recipientEmail]);
-
   const handleMarkRead = async (id) => {
     try {
       await markNotificationRead(id, true);
@@ -166,18 +164,6 @@ export default function NotificationsShell() {
 
   return (
     <>
-      {hasUser ? (
-        <button
-          type="button"
-          className="notification-fab"
-          onClick={() => setOpen((current) => !current)}
-          aria-label="Open notifications"
-        >
-          <span>Notifications</span>
-          {unreadCount > 0 ? <strong>{unreadCount}</strong> : null}
-        </button>
-      ) : null}
-
       <NotificationPanel
         open={open}
         notifications={notifications}

@@ -44,9 +44,6 @@ export default function ResourceManagementPage({ navigate, onLogout }) {
             <h1 className="panel__title">Resource Management</h1>
             <p className="subtitle">Open a resource type to manage lecture halls, meeting rooms, and equipment.</p>
           </div>
-          <button type="button" className="btn btn--ghost" onClick={() => navigate('/admin/dashboard')}>
-            Back to Dashboard
-          </button>
         </div>
 
         <div className="resource-cards">

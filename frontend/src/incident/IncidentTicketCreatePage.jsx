@@ -7,6 +7,8 @@ import { openNotifications } from '../notification/notificationBus';
 import { showToast } from '../notification/notificationBus';
 
 export default function IncidentTicketCreatePage({ resourceId, bookingId, user, navigate, onLogout }) {
+  const displayName = user?.name || 'Campus User';
+  const avatarUrl = user?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=111111&color=fff`;
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -124,36 +126,49 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
 
   return (
     <main className="scene scene--user">
-      <section className="panel panel--content user-resource-detail">
-        <nav className="site-nav" aria-label="Main navigation">
-          <div className="site-nav__brand">
-            <span className="site-nav__dot" aria-hidden="true" />
-            <div>
-              <p className="site-nav__kicker">Smart Campus</p>
-              <strong>Incident Tickets</strong>
-            </div>
+      <section className="panel panel--content user-resource-detail incident-create-page">
+        <nav className="home-nav" aria-label="Main navigation">
+          <div className="home-nav__brand">
+            <span className="home-nav__dot" aria-hidden="true" />
+            <img src="/sliit-logo.png" alt="SLIIT" className="home-nav__logo" />
+            <strong>SLIIT</strong>
           </div>
-          <div className="site-nav__links">
-            <button type="button" className="site-nav__link" onClick={() => navigate('/home')}>Home</button>
-            <button type="button" className="site-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
-            <button type="button" className="site-nav__link is-active" onClick={() => navigate('/my-tickets')}>My Tickets</button>
-            <button type="button" className="site-nav__link site-nav__link--notifications" onClick={openNotifications}>Notifications</button>
-            <button type="button" className="site-nav__link" onClick={onLogout}>Logout</button>
+          <div className="home-nav__links">
+            <button type="button" className="home-nav__link" onClick={() => navigate('/home')}>Home</button>
+            <button type="button" className="home-nav__link" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+            <button type="button" className="home-nav__link is-active" onClick={() => navigate('/my-tickets')}>My Tickets</button>
+            <button type="button" className="home-nav__link" onClick={openNotifications}>Notifications</button>
+            <button type="button" className="home-nav__link" onClick={onLogout}>Logout</button>
+          </div>
+          <div className="home-nav__user" aria-label="Logged in user">
+            <span className="home-nav__user-name">{displayName}</span>
+            {user?.picture ? (
+              <img src={avatarUrl} alt={displayName} className="home-nav__user-avatar" />
+            ) : (
+              <span className="home-nav__user-fallback" aria-hidden="true">
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
         </nav>
 
-        <h1 className="panel__title">Create Incident Ticket</h1>
+        <section className="user-hero user-hero--compact">
+          <p className="user-hero__kicker">INCIDENT REPORT</p>
+          <h1 className="panel__title">Create Incident Ticket</h1>
+          <p className="subtitle">Report issues quickly so technicians can respond and track resolution.</p>
+        </section>
         {loading ? <p className="muted">Loading resource...</p> : null}
 
-        {resource ? (
-          <div className="user-booking-card">
-            <p><strong>Resource:</strong> {resource.name}</p>
-            <p><strong>Location:</strong> {getLocationLabel(resource.location)} / {formatSublocationLabel(resource.sublocation)}</p>
-            {bookingId ? <p><strong>Booking Ref:</strong> {bookingId}</p> : null}
-          </div>
-        ) : null}
+        <div className="incident-form-card">
+          {resource ? (
+            <div className="user-booking-card">
+              <p><strong>Resource:</strong> {resource.name}</p>
+              <p><strong>Location:</strong> {getLocationLabel(resource.location)} / {formatSublocationLabel(resource.sublocation)}</p>
+              {bookingId ? <p><strong>Booking Ref:</strong> {bookingId}</p> : null}
+            </div>
+          ) : null}
 
-        <form className="resource-form incident-ticket-form" onSubmit={submit}>
+          <form className="resource-form incident-ticket-form" onSubmit={submit}>
           <div className="resource-grid incident-ticket-grid">
             <label className="resource-field">
               <span>Category<span className="required-mark">*</span></span>
@@ -226,7 +241,8 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
             <button className="btn btn--primary" type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Create Ticket'}</button>
             <button className="btn btn--ghost" type="button" onClick={() => navigate('/my-bookings')}>Back</button>
           </div>
-        </form>
+          </form>
+        </div>
 
         {error ? <p className="msg msg--error">{error}</p> : null}
       </section>
