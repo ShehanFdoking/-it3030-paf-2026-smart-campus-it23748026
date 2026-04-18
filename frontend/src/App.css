@@ -1191,6 +1191,17 @@ body {
   border-radius: 18px;
 }
 
+.admin-panel .resource-form__header h3 {
+  margin: 0;
+  color: #0f2f60;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.admin-panel .resource-form__eyebrow {
+  color: #113a7b;
+}
+
 .admin-panel .resource-table-wrap {
   margin-top: 16px;
   border-radius: 18px;
@@ -1248,26 +1259,50 @@ body {
   background: rgba(23, 45, 81, 0.84);
 }
 
+.admin-panel .btn--primary {
+  border-color: rgba(240, 176, 65, 0.7);
+  background: linear-gradient(120deg, #f4a736, #f0b24e 72%, #e39627);
+  color: #1f170f;
+  box-shadow: 0 10px 20px rgba(191, 117, 10, 0.28);
+}
+
+.admin-panel .btn--primary:hover {
+  border-color: rgba(227, 150, 39, 0.9);
+  background: linear-gradient(120deg, #e39627, #d98b1f 72%, #c97814);
+}
+
+.admin-panel .btn--add-resource {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(120deg, #0c0c0c, #191919 70%, #242424);
+  color: #f7f7f7;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.admin-panel .btn--add-resource:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: linear-gradient(120deg, #000000, #111111 70%, #1a1a1a);
+}
+
 .admin-panel .btn--edit {
-  border-color: #f2d6ae;
-  background: #fff6e8;
-  color: #a35a04;
+  border-color: rgba(255, 186, 70, 0.55);
+  background: rgba(255, 186, 70, 0.2);
+  color: #8c4f00;
 }
 
 .admin-panel .btn--edit:hover {
-  border-color: #e9c58e;
-  background: #ffefd5;
+  border-color: rgba(255, 186, 70, 0.8);
+  background: rgba(255, 186, 70, 0.3);
 }
 
 .admin-panel .btn--delete {
-  border-color: #f4bec9;
-  background: #ffecef;
-  color: #b4233f;
+  border-color: rgba(255, 125, 139, 0.5);
+  background: rgba(255, 125, 139, 0.18);
+  color: #9f1f38;
 }
 
 .admin-panel .btn--delete:hover {
-  border-color: #e7a2b0;
-  background: #ffe3e8;
+  border-color: rgba(255, 125, 139, 0.8);
+  background: rgba(255, 125, 139, 0.28);
 }
 
 .admin-panel .resource-card__tag,

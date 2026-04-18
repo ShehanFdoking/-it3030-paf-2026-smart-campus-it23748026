@@ -114,6 +114,13 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onLogout 
     setError('');
   };
 
+  const handleNew = () => {
+    setSelectedResource(null);
+    setShowForm(true);
+    setMessage('');
+    setError('');
+  };
+
   return (
     <main className="scene scene--admin">
       <section className="panel panel--content resource-page admin-panel">
@@ -174,23 +181,16 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onLogout 
               </label>
             </div>
           </div>
+          <div className="actions-row actions-row--tight">
+            <button type="button" className="btn btn--primary btn--add-resource" onClick={handleNew}>
+              Add New {meta.itemLabel}
+            </button>
+          </div>
         </div>
 
         {message ? <p className="msg msg--success">{message}</p> : null}
         {error ? <p className="msg msg--error">{error}</p> : null}
         {loading ? <p className="muted">Loading resources...</p> : null}
-
-        {!loading && searchTerm.trim() && visibleResources.length === 0 ? (
-          <p className="muted">No matching resources found.</p>
-        ) : (
-          <ResourceTable
-            resources={visibleResources}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            busy={saving}
-            categorySlug={categorySlug}
-          />
-        )}
 
         {showForm ? (
           <div className="resource-form-shell">
@@ -206,6 +206,18 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onLogout 
             />
           </div>
         ) : null}
+
+        {!loading && searchTerm.trim() && visibleResources.length === 0 ? (
+          <p className="muted">No matching resources found.</p>
+        ) : (
+          <ResourceTable
+            resources={visibleResources}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            busy={saving}
+            categorySlug={categorySlug}
+          />
+        )}
       </section>
     </main>
   );
