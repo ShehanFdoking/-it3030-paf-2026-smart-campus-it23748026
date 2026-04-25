@@ -1,5 +1,5 @@
 export const BOOKING_STATUS_OPTIONS = ['ALL', 'PENDING', 'APPROVED', 'REJECTED'];
-export const BOOKING_CATEGORY_OPTIONS = ['ALL', 'LECTURE_HALL', 'MEETING_ROOM', 'EQUIPMENT'];
+export const BOOKING_CATEGORY_OPTIONS = ['ALL', 'LECTURE_HALL', 'MEETING_ROOM', 'EQUIPMENT', 'LAB'];
 
 export function createBookingRequestForm() {
   return {

@@ -1,4 +1,4 @@
-import { formatEquipmentType, formatSublocationLabel, formatWindow, getLocationLabel, RESOURCE_CATEGORIES } from './resourceConfig';
+import { formatEquipmentType, formatLabType, formatSublocationLabel, formatWindow, getLocationLabel, RESOURCE_CATEGORIES } from './resourceConfig';
 
 export default function ResourceTable({ resources, onEdit, onDelete, busy, categorySlug }) {
   if (!resources.length) {
@@ -7,6 +7,7 @@ export default function ResourceTable({ resources, onEdit, onDelete, busy, categ
 
   const showEquipmentType = categorySlug === RESOURCE_CATEGORIES.equipment.slug;
   const showLinkedRoom = categorySlug === RESOURCE_CATEGORIES.equipment.slug;
+  const showLabType = categorySlug === RESOURCE_CATEGORIES.labs.slug;
 
   return (
     <div className="resource-table-wrap">
@@ -16,6 +17,7 @@ export default function ResourceTable({ resources, onEdit, onDelete, busy, categ
             <th>Name</th>
             <th>Capacity</th>
             {showEquipmentType ? <th>Equipment Type</th> : null}
+            {showLabType ? <th>Lab Type</th> : null}
             <th>Location</th>
             <th>Sublocation</th>
             {showLinkedRoom ? <th>Linked Room</th> : null}
@@ -30,6 +32,7 @@ export default function ResourceTable({ resources, onEdit, onDelete, busy, categ
               <td>{resource.name}</td>
               <td>{resource.capacity}</td>
               {showEquipmentType ? <td>{formatEquipmentType(resource.equipmentType)}</td> : null}
+              {showLabType ? <td>{formatLabType(resource.equipmentType)}</td> : null}
               <td>{getLocationLabel(resource.location)}</td>
               <td>{formatSublocationLabel(resource.sublocation)}</td>
               {showLinkedRoom ? <td>{resource.relatedResourceName || '-'}</td> : null}

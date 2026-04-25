@@ -375,12 +375,16 @@ public class BookingService {
         if (category == ResourceCategory.MEETING_ROOM) {
             return "This meeting room is already booked for the selected time.";
         }
+        if (category == ResourceCategory.LAB) {
+            return "This lab is already booked for the selected time.";
+        }
         return "This equipment is already booked for the selected time.";
     }
 
     private void validateExpectedAttendees(ResourceCategory category, Integer expectedAttendees,
             Integer resourceCapacity) {
-        if (category == ResourceCategory.LECTURE_HALL || category == ResourceCategory.MEETING_ROOM) {
+        if (category == ResourceCategory.LECTURE_HALL || category == ResourceCategory.MEETING_ROOM
+                || category == ResourceCategory.LAB) {
             if (expectedAttendees == null || expectedAttendees < 1) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected attendees is required");
             }

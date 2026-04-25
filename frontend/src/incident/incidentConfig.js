@@ -34,6 +34,15 @@ export const INCIDENT_CATEGORY_SUGGESTIONS = {
     { name: 'Software Issues', examples: ['Errors', 'Crashes'] },
     { name: 'Missing / Lost', examples: ['Equipment not found'] },
   ],
+  LAB: [
+    { name: 'Computer / Hardware Issues', examples: ['PC not turning on', 'Keyboard/mouse not working'] },
+    { name: 'Software / System Issues', examples: ['Software not installed', 'System crashes', 'Login issues'] },
+    { name: 'Network / Internet Issues', examples: ['No internet access', 'Slow network'] },
+    { name: 'Lab Equipment Fault', examples: ['Microscope not working', 'Sensor malfunction'] },
+    { name: 'Safety Hazard', examples: ['Chemical spill', 'Electrical hazard'] },
+    { name: 'Cleanliness / Housekeeping', examples: ['Lab not cleaned', 'Waste not disposed'] },
+    { name: 'Structural Issues', examples: ['Broken furniture', 'Lighting problems'] },
+  ],
 };
 
 export function getIncidentCategorySuggestions(resourceCategory) {

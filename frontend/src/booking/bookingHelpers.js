@@ -7,5 +7,6 @@ export function mapBookingsByCategory(bookings) {
     LECTURE_HALL: bookings.filter((item) => item.resourceCategory === 'LECTURE_HALL'),
     MEETING_ROOM: bookings.filter((item) => item.resourceCategory === 'MEETING_ROOM'),
     EQUIPMENT: bookings.filter((item) => item.resourceCategory === 'EQUIPMENT'),
+    LAB: bookings.filter((item) => item.resourceCategory === 'LAB'),
   };
 }

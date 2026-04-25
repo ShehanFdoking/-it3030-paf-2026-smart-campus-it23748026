@@ -23,6 +23,14 @@ export const RESOURCE_CATEGORIES = {
     route: '/admin/resources/equipment',
     description: 'Manage shared equipment and its availability windows.',
   },
+  labs: {
+    slug: 'labs',
+    enumValue: 'LAB',
+    label: 'Labs',
+    itemLabel: 'lab',
+    route: '/admin/resources/labs',
+    description: 'Manage computer, science, and engineering labs.',
+  },
 };
 
 export const RESOURCE_CATEGORY_LIST = Object.values(RESOURCE_CATEGORIES);
@@ -48,6 +56,12 @@ export const EQUIPMENT_TYPE_OPTIONS = [
   { value: 'MONITOR', label: 'Monitor' },
   { value: 'VISUALIZER', label: 'Visualizer' },
   { value: 'OTHER', label: 'Other' },
+];
+
+export const LAB_TYPE_OPTIONS = [
+  { value: 'COMPUTER_LAB', label: 'Computer Lab' },
+  { value: 'SCIENCE_LAB', label: 'Science Lab' },
+  { value: 'ENGINEERING_LAB', label: 'Engineering Lab' },
 ];
 
 const FLOOR_OPTIONS = (count) => Array.from({ length: count }, (_, index) => ({
@@ -132,6 +146,15 @@ export function formatEquipmentType(value) {
   }
 
   const option = EQUIPMENT_TYPE_OPTIONS.find((entry) => entry.value === value);
+  return option?.label || value;
+}
+
+export function formatLabType(value) {
+  if (!value) {
+    return '-';
+  }
+
+  const option = LAB_TYPE_OPTIONS.find((entry) => entry.value === value);
   return option?.label || value;
 }
 

@@ -151,44 +151,44 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
 
           <form className="resource-form resource-form--booking" onSubmit={handleSubmit}>
             <div className="resource-grid">
-            <label className="resource-field">
-              <span>Date<span className="required-mark">*</span></span>
-              <input className="input" type="date" min={minDate} value={form.bookingDate} onChange={(event) => updateField('bookingDate', event.target.value)} required />
-            </label>
-            <label className="resource-field">
-              <span>Purpose<span className="required-mark">*</span></span>
-              <input className="input" value={form.purpose} onChange={(event) => updateField('purpose', event.target.value)} required placeholder="Exam, workshop, seminar" />
-            </label>
-            <label className="resource-field">
-              <span>Start time<span className="required-mark">*</span></span>
-              <input className="input" type="time" value={form.startTime} onChange={(event) => updateField('startTime', event.target.value)} required />
-            </label>
-            <label className="resource-field">
-              <span>End time<span className="required-mark">*</span></span>
-              <input className="input" type="time" value={form.endTime} onChange={(event) => updateField('endTime', event.target.value)} required />
-            </label>
-            <label className="resource-field">
-              <span>
-                Expected attendees
-                {meta.enumValue === 'LECTURE_HALL' || meta.enumValue === 'MEETING_ROOM' ? <span className="required-mark">*</span> : null}
-              </span>
-              <input
-                className="input"
-                type="number"
-                min={meta.enumValue === 'MEETING_ROOM' ? '6' : '1'}
-                max={meta.enumValue === 'EQUIPMENT' ? undefined : (resource?.capacity ?? undefined)}
-                value={form.expectedAttendees}
-                onChange={(event) => updateField('expectedAttendees', event.target.value)}
-                required={meta.enumValue === 'LECTURE_HALL' || meta.enumValue === 'MEETING_ROOM'}
-                placeholder="Required for halls/rooms"
-              />
-            </label>
-            {categorySlug === 'equipment' ? (
               <label className="resource-field">
-                <span>Linked room approval code (if linked room already booked)</span>
-                <input className="input" value={form.linkedRoomApprovalCode} onChange={(event) => updateField('linkedRoomApprovalCode', event.target.value)} placeholder="Optional proof code" />
+                <span>Date<span className="required-mark">*</span></span>
+                <input className="input" type="date" min={minDate} value={form.bookingDate} onChange={(event) => updateField('bookingDate', event.target.value)} required />
               </label>
-            ) : null}
+              <label className="resource-field">
+                <span>Purpose<span className="required-mark">*</span></span>
+                <input className="input" value={form.purpose} onChange={(event) => updateField('purpose', event.target.value)} required placeholder="Exam, workshop, seminar" />
+              </label>
+              <label className="resource-field">
+                <span>Start time<span className="required-mark">*</span></span>
+                <input className="input" type="time" value={form.startTime} onChange={(event) => updateField('startTime', event.target.value)} required />
+              </label>
+              <label className="resource-field">
+                <span>End time<span className="required-mark">*</span></span>
+                <input className="input" type="time" value={form.endTime} onChange={(event) => updateField('endTime', event.target.value)} required />
+              </label>
+              <label className="resource-field">
+                <span>
+                  Expected attendees
+                  {meta.enumValue === 'LECTURE_HALL' || meta.enumValue === 'MEETING_ROOM' || meta.enumValue === 'LAB' ? <span className="required-mark">*</span> : null}
+                </span>
+                <input
+                  className="input"
+                  type="number"
+                  min={meta.enumValue === 'MEETING_ROOM' ? '6' : '1'}
+                  max={meta.enumValue === 'EQUIPMENT' ? undefined : (resource?.capacity ?? undefined)}
+                  value={form.expectedAttendees}
+                  onChange={(event) => updateField('expectedAttendees', event.target.value)}
+                  required={meta.enumValue === 'LECTURE_HALL' || meta.enumValue === 'MEETING_ROOM' || meta.enumValue === 'LAB'}
+                  placeholder="Required for halls/rooms/labs"
+                />
+              </label>
+              {categorySlug === 'equipment' ? (
+                <label className="resource-field">
+                  <span>Linked room approval code (if linked room already booked)</span>
+                  <input className="input" value={form.linkedRoomApprovalCode} onChange={(event) => updateField('linkedRoomApprovalCode', event.target.value)} placeholder="Optional proof code" />
+                </label>
+              ) : null}
             </div>
 
             <div className="actions-row">

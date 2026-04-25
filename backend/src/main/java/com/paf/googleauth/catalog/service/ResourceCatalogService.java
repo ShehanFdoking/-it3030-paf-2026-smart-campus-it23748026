@@ -88,6 +88,7 @@ public class ResourceCatalogService {
     private void applyRequest(ResourceCatalogItem item, ResourceCatalogRequest request) {
         validateRelatedResourceName(request);
         validateEquipmentType(request);
+        validateLabType(request);
         item.setCategory(request.category());
         item.setName(request.name().trim());
         item.setCapacity(request.capacity());
@@ -97,6 +98,17 @@ public class ResourceCatalogService {
         item.setRelatedResourceName(normalizeRelatedResourceName(request));
         item.setEquipmentType(normalizeEquipmentType(request));
         item.setAvailabilityWindows(toWindows(request.availabilityWindows()));
+    }
+
+    private void validateLabType(ResourceCatalogRequest request) {
+        if (request.category() != ResourceCategory.LAB) {
+            return;
+        }
+        String labType = normalizeEquipmentType(request);
+        if (labType == null || labType.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Lab type is required for lab resources");
+        }
     }
 
     private void validateEquipmentType(ResourceCatalogRequest request) {

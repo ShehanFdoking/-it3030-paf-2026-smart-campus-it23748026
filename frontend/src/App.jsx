@@ -83,9 +83,11 @@ export default function App() {
       '/resources/lecture-halls',
       '/resources/meeting-rooms',
       '/resources/equipment',
+      '/resources/labs',
       '/admin/resources/lecture-halls',
       '/admin/resources/meeting-rooms',
       '/admin/resources/equipment',
+      '/admin/resources/labs',
       '/my-bookings',
       '/my-tickets',
       '/admin/dashboard',
@@ -96,12 +98,12 @@ export default function App() {
       '/tech/dashboard',
       '/tech/resolved',
     ];
-    
+
     // Check exact match first
     if (allowedRoutes.includes(pathname)) {
       return pathname;
     }
-    
+
     // Check dynamic routes
     if (pathname.startsWith('/resources/') && pathname.endsWith('/book')) {
       return pathname;
@@ -112,7 +114,7 @@ export default function App() {
     if (pathname.startsWith('/incidents/new/')) {
       return pathname;
     }
-    
+
     return '/';
   }
 
@@ -420,6 +422,10 @@ export default function App() {
 
   if (route === '/resources/equipment') {
     return <UserResourceTypePage user={googleUser} categorySlug="equipment" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
+  }
+
+  if (route === '/resources/labs') {
+    return <UserResourceTypePage user={googleUser} categorySlug="labs" navigate={navigate} onBack={() => navigate('/resources')} onLogout={handleLogout} />;
   }
 
   if (route === '/my-bookings') {
@@ -789,6 +795,10 @@ export default function App() {
 
   if (route === '/admin/resources/equipment') {
     return <ResourceCategoryPage categorySlug="equipment" navigate={navigate} onLogout={handleLogout} />;
+  }
+
+  if (route === '/admin/resources/labs') {
+    return <ResourceCategoryPage categorySlug="labs" navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/bookings') {

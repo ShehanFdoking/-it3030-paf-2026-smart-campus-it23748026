@@ -4,6 +4,7 @@ const CATEGORY_VISUAL = {
   'lecture-halls': { token: 'LH', color: 'var(--user-visual-1)' },
   'meeting-rooms': { token: 'MR', color: 'var(--user-visual-2)' },
   equipment: { token: 'EQ', color: 'var(--user-visual-3)' },
+  labs: { token: 'LB', color: 'var(--user-visual-4, #2d6a4f)' },
 };
 
 function getCategoryToken(category) {

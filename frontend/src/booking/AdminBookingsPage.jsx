@@ -210,6 +210,7 @@ export default function AdminBookingsPage({ navigate, onLogout }) {
         {renderGroup('Lecture Hall Bookings', grouped.LECTURE_HALL)}
         {renderGroup('Meeting Room Bookings', grouped.MEETING_ROOM)}
         {renderGroup('Equipment Bookings', grouped.EQUIPMENT)}
+        {renderGroup('Lab Bookings', grouped.LAB)}
       </section>
     </main>
   );

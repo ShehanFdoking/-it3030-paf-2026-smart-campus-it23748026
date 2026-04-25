@@ -3,6 +3,7 @@ import { listResources } from '../api';
 import {
   DAY_SCOPE_OPTIONS,
   EQUIPMENT_TYPE_OPTIONS,
+  LAB_TYPE_OPTIONS,
   LOCATION_OPTIONS,
   RESOURCE_CATEGORIES,
   createEmptyResourceDraft,
@@ -43,10 +44,10 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
         equipmentType: resource.equipmentType || (resource ? '' : createEmptyResourceDraft(categorySlug).equipmentType || ''),
         availabilityWindows: resource.availabilityWindows?.length
           ? resource.availabilityWindows.map((window) => ({
-              dayScope: window.dayScope || 'WEEKDAYS',
-              openTime: window.openTime || '08:00',
-              closeTime: window.closeTime || '18:00',
-            }))
+            dayScope: window.dayScope || 'WEEKDAYS',
+            openTime: window.openTime || '08:00',
+            closeTime: window.closeTime || '18:00',
+          }))
           : [createEmptyWindow()],
       });
     } else {
@@ -186,7 +187,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
         <span className="resource-chip">Type: {meta.label}</span>
       </div>
 
-      <div className={`resource-grid${categorySlug === RESOURCE_CATEGORIES.equipment.slug ? ' resource-grid--equipment' : ''}`}>
+      <div className={`resource-grid${(categorySlug === RESOURCE_CATEGORIES.equipment.slug || categorySlug === RESOURCE_CATEGORIES.labs.slug) ? ' resource-grid--equipment' : ''}`}>
         {categorySlug === RESOURCE_CATEGORIES.equipment.slug ? (
           <label className="resource-field resource-field--half">
             <span>Equipment type<span className="required-mark">*</span></span>
@@ -204,7 +205,24 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           </label>
         ) : null}
 
-        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
+        {categorySlug === RESOURCE_CATEGORIES.labs.slug ? (
+          <label className="resource-field resource-field--half">
+            <span>Lab type<span className="required-mark">*</span></span>
+            <select
+              className="input"
+              value={draft.equipmentType || ''}
+              onChange={(event) => updateField('equipmentType', event.target.value)}
+              required
+            >
+              <option value="">Select lab type</option>
+              {LAB_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+
+        <label className={(categorySlug === RESOURCE_CATEGORIES.equipment.slug || categorySlug === RESOURCE_CATEGORIES.labs.slug) ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Name<span className="required-mark">*</span></span>
           <input
             className="input"
@@ -215,7 +233,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           />
         </label>
 
-        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
+        <label className={(categorySlug === RESOURCE_CATEGORIES.equipment.slug || categorySlug === RESOURCE_CATEGORIES.labs.slug) ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Capacity<span className="required-mark">*</span></span>
           <input
             className="input"
@@ -228,9 +246,9 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           />
         </label>
 
-        {categorySlug === RESOURCE_CATEGORIES.equipment.slug ? <div className="resource-grid__spacer" aria-hidden="true" /> : null}
+        {(categorySlug === RESOURCE_CATEGORIES.equipment.slug || categorySlug === RESOURCE_CATEGORIES.labs.slug) ? <div className="resource-grid__spacer" aria-hidden="true" /> : null}
 
-        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
+        <label className={(categorySlug === RESOURCE_CATEGORIES.equipment.slug || categorySlug === RESOURCE_CATEGORIES.labs.slug) ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Location</span>
           <select
             className="input"
@@ -243,7 +261,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           </select>
         </label>
 
-        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
+        <label className={(categorySlug === RESOURCE_CATEGORIES.equipment.slug || categorySlug === RESOURCE_CATEGORIES.labs.slug) ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Sublocation</span>
           <select
             className="input"
@@ -268,7 +286,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
               <option value="">Select a lecture hall or meeting room</option>
               {referenceOptions.map((option) => (
                 <option key={`${option.name}-${option.location}-${option.sublocation}`} value={option.name}>
-                    {option.name} - {option.categoryLabel} ({option.location} / {formatSublocationLabel(option.sublocation)})
+                  {option.name} - {option.categoryLabel} ({option.location} / {formatSublocationLabel(option.sublocation)})
                 </option>
               ))}
             </select>
@@ -278,7 +296,7 @@ export default function ResourceForm({ categorySlug, resource, busy, onCancel, o
           </label>
         ) : null}
 
-        <label className={categorySlug === RESOURCE_CATEGORIES.equipment.slug ? 'resource-field resource-field--half' : 'resource-field'}>
+        <label className={(categorySlug === RESOURCE_CATEGORIES.equipment.slug || categorySlug === RESOURCE_CATEGORIES.labs.slug) ? 'resource-field resource-field--half' : 'resource-field'}>
           <span>Status</span>
           <select
             className="input"
