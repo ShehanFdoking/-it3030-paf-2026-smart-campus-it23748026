@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   addIncidentComment,
   deleteMyIncidentTicket,
@@ -7,7 +7,7 @@ import {
   updateMyIncidentTicket,
   updateIncidentComment,
 } from '../api';
-import { INCIDENT_PRIORITIES } from './incidentConfig';
+import { INCIDENT_PRIORITIES, INCIDENT_STATUSES } from './incidentConfig';
 import { canEditOwnComment, formatDateTime } from './incidentHelpers';
 import { openNotifications } from '../notification/notificationBus';
 import { requestConfirmation, showToast } from '../notification/notificationBus';
@@ -29,6 +29,10 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
     preferredContact: '',
     attachments: [],
   });
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [sortMode, setSortMode] = useState('DATE');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const load = async () => {
     if (!user?.email) {
@@ -49,6 +53,50 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
   useEffect(() => {
     load();
   }, [user?.email]);
+
+  const visibleTickets = useMemo(() => {
+    const filtered = tickets.filter((ticket) => {
+      const search = searchTerm.trim().toLowerCase();
+      const searchMatch = !search
+        || ticket.resourceName.toLowerCase().includes(search)
+        || (ticket.category || '').toLowerCase().includes(search)
+        || (ticket.description || '').toLowerCase().includes(search)
+        || (ticket.resourceLocation || '').toLowerCase().includes(search);
+      const statusMatch = statusFilter === 'ALL' || ticket.status === statusFilter;
+      const priorityMatch = priorityFilter === 'ALL' || ticket.priority === priorityFilter;
+      return searchMatch && statusMatch && priorityMatch;
+    });
+
+    if (sortMode === 'PRIORITY') {
+      const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+      return filtered.sort((left, right) => {
+        const priorityA = priorityOrder[left.priority] ?? 999;
+        const priorityB = priorityOrder[right.priority] ?? 999;
+        if (priorityA !== priorityB) return priorityA - priorityB;
+        return new Date(right.createdAt) - new Date(left.createdAt);
+      });
+    }
+
+    if (sortMode === 'STATUS') {
+      return filtered.sort((left, right) => {
+        const statusA = left.status || '';
+        const statusB = right.status || '';
+        if (statusA !== statusB) return statusA.localeCompare(statusB);
+        return new Date(right.createdAt) - new Date(left.createdAt);
+      });
+    }
+
+    if (sortMode === 'RESOURCE') {
+      return filtered.sort((left, right) => {
+        const nameCompare = left.resourceName.localeCompare(right.resourceName);
+        if (nameCompare !== 0) return nameCompare;
+        return new Date(right.createdAt) - new Date(left.createdAt);
+      });
+    }
+
+    // Default: sort by date (most recent first)
+    return filtered.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
+  }, [tickets, searchTerm, statusFilter, priorityFilter, sortMode]);
 
   const addComment = async (ticketId) => {
     const text = (commentTextByTicket[ticketId] || '').trim();
@@ -226,7 +274,48 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
 
         {!loading && !tickets.length ? <p className="muted">No tickets yet.</p> : null}
 
-        {tickets.map((ticket) => (
+        {!loading && tickets.length > 0 ? (
+          <div className="user-resource-filter-bar">
+            <select
+              className="input user-filter-control"
+              value={sortMode}
+              onChange={(event) => setSortMode(event.target.value)}
+            >
+              <option value="DATE">Sort: Date</option>
+              <option value="PRIORITY">Sort: Priority</option>
+              <option value="STATUS">Sort: Status</option>
+              <option value="RESOURCE">Sort: Resource</option>
+            </select>
+            <select
+              className="input user-filter-control"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="ALL">All Statuses</option>
+              {INCIDENT_STATUSES.map((status) => (
+                <option key={status} value={status}>{status.replace('_', ' ')}</option>
+              ))}
+            </select>
+            <select
+              className="input user-filter-control"
+              value={priorityFilter}
+              onChange={(event) => setPriorityFilter(event.target.value)}
+            >
+              <option value="ALL">All Priorities</option>
+              {INCIDENT_PRIORITIES.map((priority) => (
+                <option key={priority} value={priority}>{priority}</option>
+              ))}
+            </select>
+            <input
+              className="input user-filter-control user-filter-control--search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search resource or category"
+            />
+          </div>
+        ) : null}
+
+        {visibleTickets.map((ticket) => (
           <article key={ticket.id} className={`admin-booking-group ticket-card ${(() => {
             const statusClass = getTicketStatusBadgeClass(ticket.status);
             return statusClass ? `admin-booking-group--${statusClass.replace('ticket-status--', '')}` : '';

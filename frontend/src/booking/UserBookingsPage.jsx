@@ -201,12 +201,10 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
           </div>
         </nav>
 
-        <section className="user-hero">
+        <section className="user-hero user-hero--compact">
           <p className="user-hero__kicker">BOOKING MANAGEMENT</p>
-          <h1 className="user-hero__title">My Bookings</h1>
-          <p className="user-hero__subtitle">
-            View and manage your resource bookings, track approval status, and report issues.
-          </p>
+          <h1 className="panel__title">My Bookings</h1>
+          <p className="subtitle">View and manage your resource bookings, track approval status, and report issues.</p>
         </section>
 
         {loading ? <p className="muted">Loading bookings...</p> : null}

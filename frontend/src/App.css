@@ -105,7 +105,7 @@ body {
   z-index: 0;
 }
 
-.home-shell > * {
+.home-shell>* {
   position: relative;
   z-index: 1;
 }
@@ -549,9 +549,11 @@ body {
   0% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-9px);
   }
+
   100% {
     transform: translateY(0);
   }
@@ -895,7 +897,7 @@ body {
   z-index: 0;
 }
 
-.admin-panel > * {
+.admin-panel>* {
   position: relative;
   z-index: 1;
 }
@@ -1535,6 +1537,7 @@ body {
 .user-resource-detail.panel--content {
   padding: 0 24px 24px;
 }
+
 .user-resource-hub {
   position: relative;
   overflow: hidden;
@@ -1577,12 +1580,12 @@ body {
   z-index: 0;
 }
 
-.user-resource-hub > * {
+.user-resource-hub>* {
   position: relative;
   z-index: 1;
 }
 
-.user-resource-detail > * {
+.user-resource-detail>* {
   position: relative;
   z-index: 1;
 }
@@ -1689,10 +1692,12 @@ body {
   border-radius: 14px;
   display: grid;
   place-items: center;
+
   .user-resource-hub.panel--content,
   .user-resource-detail.panel--content {
     padding: 0 16px 16px;
   }
+
   color: #ffffff;
   font-size: 0.9rem;
   font-weight: 800;
@@ -1769,7 +1774,8 @@ body {
 .incident-create-page .user-hero,
 .user-incident-page .user-hero,
 .incident-create-page .incident-form-card,
-.user-incident-page .ticket-card {
+.user-incident-page .ticket-card,
+.user-incident-page .user-resource-filter-bar {
   width: min(1180px, 100%);
   margin-left: auto;
   margin-right: auto;
@@ -1792,7 +1798,7 @@ body {
   gap: 18px 14px;
 }
 
-.incident-form-card .resource-field > span,
+.incident-form-card .resource-field>span,
 .incident-form-card .resource-field__hint {
   color: #d6e6ff;
 }
@@ -2013,7 +2019,7 @@ body {
   color: #4e5874;
 }
 
-.booking-request-page .booking-form-card .resource-field > span {
+.booking-request-page .booking-form-card .resource-field>span {
   color: #e5efff;
 }
 
@@ -2053,6 +2059,9 @@ body {
   border-radius: 18px;
   background: #ffffff30;
   box-shadow: 0 12px 24px rgba(3, 12, 29, 0.12);
+  width: min(1180px, 100%);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .user-bookings-page .resource-table {
@@ -2082,6 +2091,9 @@ body {
   border: 1px solid rgba(194, 215, 247, 0.72);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.95);
+  width: min(1180px, 100%);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .admin-bookings-page .resource-page__header {
