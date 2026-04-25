@@ -54,6 +54,7 @@ export default function App() {
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
+    confirmPassword: '',
   });
   const [adminMessage, setAdminMessage] = useState('');
   const [adminSummary, setAdminSummary] = useState({
@@ -317,6 +318,11 @@ export default function App() {
       return;
     }
 
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setError('New password and confirm password do not match');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setAdminMessage('');
@@ -324,7 +330,7 @@ export default function App() {
     try {
       const result = await changeAdminPassword(adminUser.email, passwordForm.currentPassword, passwordForm.newPassword);
       setAdminMessage(result.message || 'Password changed successfully');
-      setPasswordForm({ currentPassword: '', newPassword: '' });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Password update failed');
     } finally {
@@ -403,7 +409,101 @@ export default function App() {
             <div className="home-hero__image-panel" aria-label="Graduate hero image" />
 
           </section>
+
+          <section className="home-facilities">
+            <h2 className="home-facilities__title">Our Facilities</h2>
+            <p className="home-facilities__subtitle">Explore our state-of-the-art campus facilities designed for your success</p>
+
+            <div className="home-facilities__grid">
+              <div className="facility-card">
+                <img src="/com lab.jpg" alt="Computer Lab" className="facility-card__image" />
+                <h3 className="facility-card__title">Computer Lab</h3>
+              </div>
+
+              <div className="facility-card">
+                <img src="/lec hall.jpg" alt="Lecture Hall" className="facility-card__image" />
+                <h3 className="facility-card__title">Lecture Hall</h3>
+              </div>
+
+              <div className="facility-card">
+                <img src="/eng lab.jpg" alt="Engineering Lab" className="facility-card__image" />
+                <h3 className="facility-card__title">Engineering Lab</h3>
+              </div>
+
+              <div className="facility-card">
+                <img src="/audi.jpg" alt="Auditorium" className="facility-card__image" />
+                <h3 className="facility-card__title">Auditorium</h3>
+              </div>
+
+              <div className="facility-card">
+                <img src="/bio lab.jpeg" alt="Biology Lab" className="facility-card__image" />
+                <h3 className="facility-card__title">Biology Lab</h3>
+              </div>
+
+              <div className="facility-card">
+                <img src="/lib.jpeg" alt="Library" className="facility-card__image" />
+                <h3 className="facility-card__title">Library</h3>
+              </div>
+            </div>
+          </section>
         </section>
+
+        <footer className="home-footer">
+          <div className="home-footer__content">
+            <div className="home-footer__section">
+              <div className="home-footer__brand">
+                <img src="/sliit-logo.png" alt="SLIIT" className="home-footer__logo" />
+                <strong>SLIIT</strong>
+              </div>
+              <p className="home-footer__tagline">
+                Sri Lanka Institute of Information Technology
+              </p>
+              <p className="home-footer__description">
+                Empowering students with smart resource management and seamless campus experience.
+              </p>
+            </div>
+
+            <div className="home-footer__section">
+              <h4 className="home-footer__heading">Quick Links</h4>
+              <ul className="home-footer__links">
+                <li><button type="button" onClick={() => navigate('/resources')}>Resources</button></li>
+                <li><button type="button" onClick={() => navigate('/my-bookings')}>My Bookings</button></li>
+                <li><button type="button" onClick={() => navigate('/my-tickets')}>My Tickets</button></li>
+                <li><button type="button" onClick={openNotifications}>Notifications</button></li>
+              </ul>
+            </div>
+
+            <div className="home-footer__section">
+              <h4 className="home-footer__heading">Resources</h4>
+              <ul className="home-footer__links">
+                <li><button type="button" onClick={() => navigate('/resources/lecture-halls')}>Lecture Halls</button></li>
+                <li><button type="button" onClick={() => navigate('/resources/meeting-rooms')}>Meeting Rooms</button></li>
+                <li><button type="button" onClick={() => navigate('/resources/equipment')}>Equipment</button></li>
+                <li><button type="button" onClick={() => navigate('/resources/labs')}>Labs</button></li>
+              </ul>
+            </div>
+
+            <div className="home-footer__section">
+              <h4 className="home-footer__heading">Contact</h4>
+              <ul className="home-footer__contact">
+                <li>📧 support@sliit.lk</li>
+                <li>📞 +94 11 754 4801</li>
+                <li>📍 New Kandy Road, Malabe</li>
+                <li>🕒 Mon - Fri: 8:00 AM - 5:00 PM</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="home-footer__bottom">
+            <p>&copy; 2026 SLIIT. All rights reserved.</p>
+            <div className="home-footer__social">
+              <a href="#" aria-label="Facebook">FB</a>
+              <a href="#" aria-label="Twitter">TW</a>
+              <a href="#" aria-label="LinkedIn">IN</a>
+              <a href="#" aria-label="Instagram">IG</a>
+            </div>
+          </div>
+        </footer>
       </main>
     );
   }
@@ -486,53 +586,87 @@ export default function App() {
               </button>
             </div>
           </nav>
-          <h1 className="panel__title">Admin Profile</h1>
-          {!adminUser ? (
-            <p>Admin session not found. Please log in again.</p>
-          ) : (
-            <>
-              <p><strong>Role:</strong> Administrator</p>
 
-              <h2 className="panel__subtitle">Change Password</h2>
-              <form onSubmit={handleAdminPasswordChange} className="stack-form">
-                <label className="field-label" htmlFor="current-admin-password">Current Password<span className="required-mark">*</span></label>
-                <input
-                  id="current-admin-password"
-                  type="password"
-                  placeholder="Current password"
-                  value={passwordForm.currentPassword}
-                  onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))}
-                  required
-                  className="input"
-                />
-                <label className="field-label" htmlFor="new-admin-password">New Password<span className="required-mark">*</span></label>
-                <input
-                  id="new-admin-password"
-                  type="password"
-                  placeholder="New password"
-                  value={passwordForm.newPassword}
-                  onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))}
-                  required
-                  minLength={6}
-                  className="input"
-                />
-                <button type="submit" disabled={loading} className="btn btn--primary">
-                  {loading ? 'Saving...' : 'Update Password'}
-                </button>
-              </form>
-            </>
-          )}
+          <div className="admin-profile-container">
+            <div className="admin-profile-card">
+              <div className="admin-profile-header">
+                <h1 className="admin-profile-title">Admin Profile</h1>
+                <p className="admin-profile-role"><strong>Role:</strong> Administrator</p>
+              </div>
 
-          {adminMessage ? <p className="msg msg--success">{adminMessage}</p> : null}
-          {error ? <p className="msg msg--error">{error}</p> : null}
+              {!adminUser ? (
+                <p className="msg msg--error">Admin session not found. Please log in again.</p>
+              ) : (
+                <div className="admin-profile-content">
+                  <h2 className="admin-profile-section-title">Change Password</h2>
 
-          <div className="actions-row">
-            <button type="button" onClick={() => navigate('/admin/dashboard')} className="btn btn--ghost">
-              Back to Dashboard
-            </button>
-            <button type="button" onClick={handleLogout} className="btn btn--ghost">
-              Logout
-            </button>
+                  {adminMessage ? <p className="msg msg--success">{adminMessage}</p> : null}
+                  {error ? <p className="msg msg--error">{error}</p> : null}
+
+                  <form onSubmit={handleAdminPasswordChange} className="admin-profile-form">
+                    <div className="form-field">
+                      <label className="field-label" htmlFor="current-admin-password">
+                        Current Password<span className="required-mark">*</span>
+                      </label>
+                      <input
+                        id="current-admin-password"
+                        type="password"
+                        placeholder="Enter current password"
+                        value={passwordForm.currentPassword}
+                        onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))}
+                        required
+                        className="input"
+                      />
+                    </div>
+
+                    <div className="form-field">
+                      <label className="field-label" htmlFor="new-admin-password">
+                        New Password<span className="required-mark">*</span>
+                      </label>
+                      <input
+                        id="new-admin-password"
+                        type="password"
+                        placeholder="Enter new password (min 6 characters)"
+                        value={passwordForm.newPassword}
+                        onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))}
+                        required
+                        minLength={6}
+                        className="input"
+                      />
+                    </div>
+
+                    <div className="form-field">
+                      <label className="field-label" htmlFor="confirm-admin-password">
+                        Confirm Password<span className="required-mark">*</span>
+                      </label>
+                      <input
+                        id="confirm-admin-password"
+                        type="password"
+                        placeholder="Re-enter new password"
+                        value={passwordForm.confirmPassword}
+                        onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+                        required
+                        minLength={6}
+                        className="input"
+                      />
+                    </div>
+
+                    <button type="submit" disabled={loading} className="btn btn--primary btn--full">
+                      {loading ? 'Updating...' : 'Update Password'}
+                    </button>
+                  </form>
+
+                  <div className="admin-profile-actions">
+                    <button type="button" onClick={() => navigate('/admin/dashboard')} className="btn btn--ghost">
+                      Back to Dashboard
+                    </button>
+                    <button type="button" onClick={handleLogout} className="btn btn--ghost">
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </main>
@@ -633,8 +767,16 @@ export default function App() {
               </button>
             </div>
           </nav>
-          <h1 className="panel__title">Admin Dashboard</h1>
-          {!adminUser ? <p>Admin session not found. Please sign in again.</p> : <p>Welcome to the admin dashboard.</p>}
+
+          <div className="admin-dashboard-hero">
+            <p className="admin-dashboard-hero__kicker">ADMIN CONTROL CENTER</p>
+            <h1 className="admin-dashboard-hero__title">Admin Dashboard</h1>
+            <p className="admin-dashboard-hero__subtitle">
+              Monitor system activity, manage approvals, and oversee campus resources in real-time.
+            </p>
+          </div>
+
+          {!adminUser ? <p className="msg msg--error">Admin session not found. Please sign in again.</p> : null}
           {adminSummaryLoading ? <p className="muted">Loading admin summary...</p> : null}
           {adminSummaryError ? <p className="msg msg--error">{adminSummaryError}</p> : null}
 
