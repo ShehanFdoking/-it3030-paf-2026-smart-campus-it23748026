@@ -23,3 +23,7 @@ export function requestConfirmation({ title, message, confirmLabel, cancelLabel,
 export function openNotifications() {
   window.dispatchEvent(new CustomEvent('app:open-notifications'));
 }
+
+export function refreshNotifications() {
+  window.dispatchEvent(new CustomEvent('app:refresh-notifications'));
+}

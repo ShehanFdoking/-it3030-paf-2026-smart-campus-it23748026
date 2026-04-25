@@ -1,5 +1,6 @@
 package com.paf.googleauth.catalog.service;
 
+import com.paf.googleauth.booking.repository.BookingRepository;
 import com.paf.googleauth.catalog.dto.AvailabilityWindowRequest;
 import com.paf.googleauth.catalog.dto.AvailabilityWindowResponse;
 import com.paf.googleauth.catalog.dto.ResourceCatalogRequest;
@@ -9,6 +10,7 @@ import com.paf.googleauth.catalog.model.ResourceCatalogItem;
 import com.paf.googleauth.catalog.model.ResourceCategory;
 import com.paf.googleauth.catalog.model.ResourceStatus;
 import com.paf.googleauth.catalog.repository.ResourceCatalogRepository;
+import com.paf.googleauth.notification.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,14 +19,21 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
 public class ResourceCatalogService {
 
     private final ResourceCatalogRepository repository;
+    private final NotificationService notificationService;
+    private final BookingRepository bookingRepository;
 
-    public ResourceCatalogService(ResourceCatalogRepository repository) {
+    public ResourceCatalogService(ResourceCatalogRepository repository,
+            NotificationService notificationService,
+            BookingRepository bookingRepository) {
         this.repository = repository;
+        this.notificationService = notificationService;
+        this.bookingRepository = bookingRepository;
     }
 
     public List<ResourceCatalogResponse> list(ResourceCategory category, String sortBy) {
@@ -51,23 +60,69 @@ public class ResourceCatalogService {
         return toResponse(findRequired(id));
     }
 
-    public ResourceCatalogResponse create(ResourceCatalogRequest request) {
+    public ResourceCatalogResponse create(ResourceCatalogRequest request, String adminEmail) {
         validateDuplicateName(request.name(), null);
         ResourceCatalogItem item = new ResourceCatalogItem();
         applyRequest(item, request);
-        return toResponse(repository.save(item));
+        ResourceCatalogItem saved = repository.save(item);
+
+        if (adminEmail != null && !adminEmail.isBlank()) {
+            notificationService.notifyResourceCreated(
+                    adminEmail.trim(),
+                    saved.getId(),
+                    saved.getName(),
+                    saved.getCategory() == null ? "resource" : saved.getCategory().getDisplayName());
+        }
+
+        return toResponse(saved);
     }
 
-    public ResourceCatalogResponse update(String id, ResourceCatalogRequest request) {
+    public ResourceCatalogResponse update(String id, ResourceCatalogRequest request, String adminEmail) {
         ResourceCatalogItem item = findRequired(id);
+        ResourceStatus previousStatus = item.getStatus();
         validateDuplicateName(request.name(), id);
         applyRequest(item, request);
-        return toResponse(repository.save(item));
+        ResourceCatalogItem saved = repository.save(item);
+
+        // Notify admin confirmation
+        if (adminEmail != null && !adminEmail.isBlank()) {
+            notificationService.notifyResourceUpdated(adminEmail.trim(), saved.getId(), saved.getName());
+        }
+
+        // Notify users with bookings if resource status changed
+        ResourceStatus newStatus = saved.getStatus();
+        if (previousStatus != newStatus) {
+            notifyAffectedBookingUsers(saved.getId(), saved.getName(), newStatus.name());
+        }
+
+        return toResponse(saved);
     }
 
-    public void delete(String id) {
+    public void delete(String id, String adminEmail) {
         ResourceCatalogItem item = findRequired(id);
+        // Notify users with bookings before deleting
+        notifyAffectedBookingUsers(item.getId(), item.getName(), "DELETED");
+        // Notify admin confirmation
+        if (adminEmail != null && !adminEmail.isBlank()) {
+            notificationService.notifyResourceDeletedAdmin(adminEmail.trim(), item.getId(), item.getName());
+        }
         repository.delete(item);
+    }
+
+    private void notifyAffectedBookingUsers(String resourceId, String resourceName, String eventType) {
+        List<String> affectedEmails = bookingRepository.findAllByResourceId(resourceId).stream()
+                .map(booking -> booking.getRequesterEmail())
+                .filter(email -> email != null && !email.isBlank())
+                .collect(Collectors.toSet())
+                .stream().toList();
+
+        for (String email : affectedEmails) {
+            if ("DELETED".equals(eventType)) {
+                notificationService.notifyResourceDeleted(email, resourceId, resourceName);
+            } else {
+                notificationService.notifyResourceStatusChange(email, resourceId, resourceName, eventType);
+            }
+        }
     }
 
     private ResourceCatalogItem findRequired(String id) {

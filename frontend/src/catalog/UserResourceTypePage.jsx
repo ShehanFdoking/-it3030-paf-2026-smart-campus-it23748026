@@ -16,6 +16,7 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('LOCATION');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [labTypeFilter, setLabTypeFilter] = useState('ALL');
   const [locationSublocationFilter, setLocationSublocationFilter] = useState({});
 
   useEffect(() => {
@@ -43,11 +44,21 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
         || (resource.sublocation || '').toLowerCase().includes(search)
         || getLocationLabel(resource.location).toLowerCase().includes(search);
       const statusMatch = statusFilter === 'ALL' || resource.status === statusFilter;
-      return searchMatch && statusMatch;
+      const labTypeMatch = categorySlug !== 'labs' || labTypeFilter === 'ALL' || resource.equipmentType === labTypeFilter;
+      return searchMatch && statusMatch && labTypeMatch;
     });
 
     if (sortMode === 'NAME') {
       return filtered.sort((left, right) => left.name.localeCompare(right.name));
+    }
+
+    if (sortMode === 'LAB_TYPE') {
+      return filtered.sort((left, right) => {
+        const typeA = (left.equipmentType || '').toLowerCase();
+        const typeB = (right.equipmentType || '').toLowerCase();
+        if (typeA !== typeB) return typeA.localeCompare(typeB);
+        return left.name.localeCompare(right.name);
+      });
     }
 
     return filtered.sort((left, right) => {
@@ -63,7 +74,7 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
 
       return left.name.localeCompare(right.name);
     });
-  }, [resources, searchTerm, sortMode, statusFilter]);
+  }, [resources, searchTerm, sortMode, statusFilter, categorySlug, labTypeFilter]);
 
   const groupedByLocation = useMemo(() => {
     return visibleResources.reduce((accumulator, resource) => {
@@ -137,6 +148,7 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
           >
             <option value="LOCATION">Sort: Location</option>
             <option value="NAME">Sort: Name</option>
+            {categorySlug === 'labs' ? <option value="LAB_TYPE">Sort: Lab Type</option> : null}
           </select>
           <select
             className="input user-filter-control"
@@ -147,6 +159,18 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
             <option value="ACTIVE">ACTIVE</option>
             <option value="OUT_OF_SERVICE">OUT OF SERVICE</option>
           </select>
+          {categorySlug === 'labs' ? (
+            <select
+              className="input user-filter-control"
+              value={labTypeFilter}
+              onChange={(event) => setLabTypeFilter(event.target.value)}
+            >
+              <option value="ALL">All Lab Types</option>
+              <option value="COMPUTER_LAB">Computer Lab</option>
+              <option value="SCIENCE_LAB">Science Lab</option>
+              <option value="ENGINEERING_LAB">Engineering Lab</option>
+            </select>
+          ) : null}
           <input
             className="input user-filter-control user-filter-control--search"
             value={searchTerm}
@@ -181,7 +205,7 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
                     }))}
                   >
                     {sublocationOptions.map((value) => (
-                        <option key={value} value={value}>{value === 'ALL' ? 'All' : formatSublocationLabel(value)}</option>
+                      <option key={value} value={value}>{value === 'ALL' ? 'All' : formatSublocationLabel(value)}</option>
                     ))}
                   </select>
                 </div>

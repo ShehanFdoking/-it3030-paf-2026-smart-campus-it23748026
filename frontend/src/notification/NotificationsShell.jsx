@@ -56,6 +56,26 @@ export default function NotificationsShell() {
     setRecipientEmail(readSessionEmail());
   };
 
+  const loadNotifications = async (email) => {
+    const target = email || recipientEmail;
+    if (!target) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      const [items, count] = await Promise.all([
+        listNotifications(target),
+        getUnreadNotificationCount(target),
+      ]);
+      setNotifications(items);
+      setUnreadCount(Number(count?.count || 0));
+    } catch {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  };
+
   useEffect(() => {
     const handleToast = (event) => {
       const detail = event.detail || {};
@@ -82,43 +102,30 @@ export default function NotificationsShell() {
 
     const handleOpenNotifications = () => {
       setOpen(true);
+      loadNotifications();
+    };
+
+    const handleRefreshNotifications = () => {
+      loadNotifications();
     };
 
     window.addEventListener('app:toast', handleToast);
     window.addEventListener('app:confirm', handleConfirm);
     window.addEventListener('app:open-notifications', handleOpenNotifications);
+    window.addEventListener('app:refresh-notifications', handleRefreshNotifications);
     window.addEventListener('storage', refreshSessions);
     return () => {
       window.removeEventListener('app:toast', handleToast);
       window.removeEventListener('app:confirm', handleConfirm);
       window.removeEventListener('app:open-notifications', handleOpenNotifications);
+      window.removeEventListener('app:refresh-notifications', handleRefreshNotifications);
       window.removeEventListener('storage', refreshSessions);
     };
-  }, []);
+  }, [recipientEmail]);
 
   useEffect(() => {
-    const load = async () => {
-      if (!recipientEmail) {
-        setNotifications([]);
-        setUnreadCount(0);
-        return;
-      }
-
-      try {
-        const [items, count] = await Promise.all([
-          listNotifications(recipientEmail),
-          getUnreadNotificationCount(recipientEmail),
-        ]);
-        setNotifications(items);
-        setUnreadCount(Number(count?.count || 0));
-      } catch {
-        setNotifications([]);
-        setUnreadCount(0);
-      }
-    };
-
-    load();
-    const timer = window.setInterval(load, 15000);
+    loadNotifications();
+    const timer = window.setInterval(loadNotifications, 10000);
     return () => window.clearInterval(timer);
   }, [recipientEmail]);
 

@@ -3,42 +3,59 @@ import { createResource, deleteResource, listResources, updateResource } from '.
 import ResourceForm from './ResourceForm';
 import ResourceTable from './ResourceTable';
 import { getCategoryMeta } from './resourceConfig';
-import { openNotifications, requestConfirmation, showToast } from '../notification/notificationBus';
+import { openNotifications, requestConfirmation, showToast, refreshNotifications } from '../notification/notificationBus';
 
-export default function ResourceCategoryPage({ categorySlug, navigate, onLogout }) {
+export default function ResourceCategoryPage({ categorySlug, adminUser, navigate, onLogout }) {
   const meta = getCategoryMeta(categorySlug);
+  const adminEmail = adminUser?.email || null;
   const [resources, setResources] = useState([]);
   const [sortMode, setSortMode] = useState('NAME');
   const [searchTerm, setSearchTerm] = useState('');
+  const [labTypeFilter, setLabTypeFilter] = useState('ALL');
   const [selectedResource, setSelectedResource] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   const visibleResources = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    if (!query) {
-      return resources;
+    let filtered = resources;
+
+    if (query) {
+      filtered = resources.filter((resource) => {
+        const searchableText = [
+          resource.name,
+          resource.location,
+          resource.sublocation,
+          resource.status,
+          resource.relatedResourceName,
+          resource.equipmentType,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return searchableText.includes(query);
+      });
     }
 
-    return resources.filter((resource) => {
-      const searchableText = [
-        resource.name,
-        resource.location,
-        resource.sublocation,
-        resource.status,
-        resource.relatedResourceName,
-        resource.equipmentType,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+    // Filter by lab type if labs category
+    if (categorySlug === 'labs' && labTypeFilter !== 'ALL') {
+      filtered = filtered.filter((resource) => resource.equipmentType === labTypeFilter);
+    }
 
-      return searchableText.includes(query);
-    });
-  }, [resources, searchTerm]);
+    if (sortMode === 'LAB_TYPE') {
+      return [...filtered].sort((a, b) => {
+        const typeA = (a.equipmentType || '').toLowerCase();
+        const typeB = (b.equipmentType || '').toLowerCase();
+        if (typeA !== typeB) return typeA.localeCompare(typeB);
+        return (a.name || '').localeCompare(b.name || '');
+      });
+    }
+
+    return filtered;
+  }, [resources, searchTerm, sortMode, categorySlug, labTypeFilter]);
 
   const loadResources = async () => {
     setLoading(true);
@@ -60,22 +77,24 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onLogout 
 
   const handleCreateOrUpdate = async (payload) => {
     setSaving(true);
-    setMessage('');
     setError('');
 
     try {
       if (selectedResource) {
-        await updateResource(selectedResource.id, payload);
-        setMessage(`${meta.itemLabel} updated successfully`);
+        await updateResource(selectedResource.id, payload, adminEmail);
+        showToast(`${meta.itemLabel} updated successfully`, 'success', 'Resource updated');
       } else {
-        await createResource(payload);
-        setMessage(`${meta.itemLabel} created successfully`);
+        await createResource(payload, adminEmail);
+        showToast(`${meta.itemLabel} created successfully`, 'success', 'Resource created');
       }
       setSelectedResource(null);
       setShowForm(false);
       await loadResources();
+      refreshNotifications();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to save resource');
+      const errorMessage = err instanceof Error ? err.message : 'Unable to save resource';
+      setError(errorMessage);
+      showToast(errorMessage, 'error', 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -88,14 +107,13 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onLogout 
       confirmLabel: 'Delete',
       onConfirm: async () => {
         setSaving(true);
-        setMessage('');
         setError('');
 
         try {
-          await deleteResource(resource.id);
-          setMessage(`${resource.name} deleted successfully`);
+          await deleteResource(resource.id, adminEmail);
           showToast(`${resource.name} deleted successfully`, 'success', 'Resource deleted');
           await loadResources();
+          refreshNotifications();
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Unable to delete resource';
           setError(errorMessage);
@@ -110,14 +128,12 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onLogout 
   const handleEdit = (resource) => {
     setSelectedResource(resource);
     setShowForm(true);
-    setMessage('');
     setError('');
   };
 
   const handleNew = () => {
     setSelectedResource(null);
     setShowForm(true);
-    setMessage('');
     setError('');
   };
 
@@ -168,8 +184,20 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onLogout 
                 <select className="input" value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
                   <option value="NAME">By Name</option>
                   <option value="LOCATION">By Location</option>
+                  {categorySlug === 'labs' ? <option value="LAB_TYPE">By Lab Type</option> : null}
                 </select>
               </label>
+              {categorySlug === 'labs' ? (
+                <label className="resource-field resource-field--control">
+                  <span>Filter by lab type</span>
+                  <select className="input" value={labTypeFilter} onChange={(event) => setLabTypeFilter(event.target.value)}>
+                    <option value="ALL">All Lab Types</option>
+                    <option value="COMPUTER_LAB">Computer Lab</option>
+                    <option value="SCIENCE_LAB">Science Lab</option>
+                    <option value="ENGINEERING_LAB">Engineering Lab</option>
+                  </select>
+                </label>
+              ) : null}
               <label className="resource-field resource-field--control resource-field--control-search">
                 <span>Search resources</span>
                 <input
@@ -188,7 +216,6 @@ export default function ResourceCategoryPage({ categorySlug, navigate, onLogout 
           </div>
         </div>
 
-        {message ? <p className="msg msg--success">{message}</p> : null}
         {error ? <p className="msg msg--error">{error}</p> : null}
         {loading ? <p className="muted">Loading resources...</p> : null}
 

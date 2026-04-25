@@ -62,7 +62,14 @@ public class IncidentTicketService {
         ticket.setCreatedAt(Instant.now());
         ticket.setUpdatedAt(Instant.now());
 
-        return toResponse(incidentTicketRepository.save(ticket));
+        IncidentTicket saved = incidentTicketRepository.save(ticket);
+
+        notificationService.notifyTicketCreated(
+                saved.getReporterEmail(),
+                saved.getId(),
+                saved.getResourceName());
+
+        return toResponse(saved);
     }
 
     public List<IncidentTicketResponse> listMyTickets(String email) {

@@ -41,18 +41,25 @@ public class ResourceCatalogController {
     }
 
     @PostMapping
-    public ResourceCatalogResponse create(@Valid @RequestBody ResourceCatalogRequest request) {
-        return service.create(request);
+    public ResourceCatalogResponse create(
+            @Valid @RequestBody ResourceCatalogRequest request,
+            @RequestHeader(value = "X-Admin-Email", required = false) String adminEmail) {
+        return service.create(request, adminEmail);
     }
 
     @PutMapping("/{id}")
-    public ResourceCatalogResponse update(@PathVariable String id, @Valid @RequestBody ResourceCatalogRequest request) {
-        return service.update(id, request);
+    public ResourceCatalogResponse update(
+            @PathVariable String id,
+            @Valid @RequestBody ResourceCatalogRequest request,
+            @RequestHeader(value = "X-Admin-Email", required = false) String adminEmail) {
+        return service.update(id, request, adminEmail);
     }
 
     @DeleteMapping("/{id}")
-    public Map<String, String> delete(@PathVariable String id) {
-        service.delete(id);
+    public Map<String, String> delete(
+            @PathVariable String id,
+            @RequestHeader(value = "X-Admin-Email", required = false) String adminEmail) {
+        service.delete(id, adminEmail);
         return Map.of("message", "Resource deleted successfully");
     }
 }

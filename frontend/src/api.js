@@ -61,11 +61,12 @@ export async function getResource(id) {
   return parseApiResponse(response);
 }
 
-export async function createResource(payload) {
+export async function createResource(payload, adminEmail) {
   const response = await fetch(`${API_BASE_URL}/api/admin/resources`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(adminEmail ? { 'X-Admin-Email': adminEmail } : {}),
     },
     body: JSON.stringify(payload),
   });
@@ -73,11 +74,12 @@ export async function createResource(payload) {
   return parseApiResponse(response);
 }
 
-export async function updateResource(id, payload) {
+export async function updateResource(id, payload, adminEmail) {
   const response = await fetch(`${API_BASE_URL}/api/admin/resources/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
+      ...(adminEmail ? { 'X-Admin-Email': adminEmail } : {}),
     },
     body: JSON.stringify(payload),
   });
@@ -85,9 +87,12 @@ export async function updateResource(id, payload) {
   return parseApiResponse(response);
 }
 
-export async function deleteResource(id) {
+export async function deleteResource(id, adminEmail) {
   const response = await fetch(`${API_BASE_URL}/api/admin/resources/${id}`, {
     method: 'DELETE',
+    headers: {
+      ...(adminEmail ? { 'X-Admin-Email': adminEmail } : {}),
+    },
   });
 
   return parseApiResponse(response);

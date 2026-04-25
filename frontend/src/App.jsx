@@ -786,19 +786,19 @@ export default function App() {
   }
 
   if (route === '/admin/resources/lecture-halls') {
-    return <ResourceCategoryPage categorySlug="lecture-halls" navigate={navigate} onLogout={handleLogout} />;
+    return <ResourceCategoryPage categorySlug="lecture-halls" adminUser={adminUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/resources/meeting-rooms') {
-    return <ResourceCategoryPage categorySlug="meeting-rooms" navigate={navigate} onLogout={handleLogout} />;
+    return <ResourceCategoryPage categorySlug="meeting-rooms" adminUser={adminUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/resources/equipment') {
-    return <ResourceCategoryPage categorySlug="equipment" navigate={navigate} onLogout={handleLogout} />;
+    return <ResourceCategoryPage categorySlug="equipment" adminUser={adminUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/resources/labs') {
-    return <ResourceCategoryPage categorySlug="labs" navigate={navigate} onLogout={handleLogout} />;
+    return <ResourceCategoryPage categorySlug="labs" adminUser={adminUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/bookings') {

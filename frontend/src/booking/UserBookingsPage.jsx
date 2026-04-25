@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { deleteMyBooking, listMyBookings, updateMyBooking, listIncidentsByBookingId } from '../api';
-import { createBookingEditForm } from './bookingConfig';
+import { createBookingEditForm, BOOKING_STATUS_OPTIONS, BOOKING_CATEGORY_OPTIONS } from './bookingConfig';
 import { toNullableNumber } from './bookingHelpers';
 import { getLocationLabel, formatSublocationLabel } from '../catalog/resourceConfig';
 import { openNotifications } from '../notification/notificationBus';
@@ -27,6 +27,10 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
   const [editingId, setEditingId] = useState('');
   const [incidentsByBooking, setIncidentsByBooking] = useState({});
   const [form, setForm] = useState({ bookingDate: '', startTime: '', endTime: '', purpose: '', expectedAttendees: '', linkedRoomApprovalCode: '' });
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [sortMode, setSortMode] = useState('DATE');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const load = async () => {
     if (!user?.email) {
@@ -61,6 +65,39 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
   }, [user?.email]);
 
   const editable = useMemo(() => bookings.find((item) => item.id === editingId) || null, [bookings, editingId]);
+
+  const visibleBookings = useMemo(() => {
+    const filtered = bookings.filter((booking) => {
+      const search = searchTerm.trim().toLowerCase();
+      const searchMatch = !search
+        || booking.resourceName.toLowerCase().includes(search)
+        || (booking.resourceLocation || '').toLowerCase().includes(search)
+        || (booking.resourceSublocation || '').toLowerCase().includes(search);
+      const categoryMatch = categoryFilter === 'ALL' || booking.resourceCategory === categoryFilter;
+      const statusMatch = statusFilter === 'ALL' || booking.status === statusFilter;
+      return searchMatch && categoryMatch && statusMatch;
+    });
+
+    if (sortMode === 'NAME') {
+      return filtered.sort((left, right) => left.resourceName.localeCompare(right.resourceName));
+    }
+
+    if (sortMode === 'STATUS') {
+      return filtered.sort((left, right) => {
+        const statusA = left.status || '';
+        const statusB = right.status || '';
+        if (statusA !== statusB) return statusA.localeCompare(statusB);
+        return left.bookingDate.localeCompare(right.bookingDate);
+      });
+    }
+
+    // Default: sort by date (most recent first)
+    return filtered.sort((left, right) => {
+      const dateCompare = right.bookingDate.localeCompare(left.bookingDate);
+      if (dateCompare !== 0) return dateCompare;
+      return right.startTime.localeCompare(left.startTime);
+    });
+  }, [bookings, searchTerm, categoryFilter, statusFilter, sortMode]);
 
   const startEdit = (booking) => {
     if (booking.status !== 'PENDING' || booking.systemGenerated) {
@@ -164,12 +201,60 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
           </div>
         </nav>
 
-        <h1 className="panel__title">My Bookings</h1>
+        <section className="user-hero">
+          <p className="user-hero__kicker">BOOKING MANAGEMENT</p>
+          <h1 className="user-hero__title">My Bookings</h1>
+          <p className="user-hero__subtitle">
+            View and manage your resource bookings, track approval status, and report issues.
+          </p>
+        </section>
+
         {loading ? <p className="muted">Loading bookings...</p> : null}
         {message ? <p className="msg msg--success">{message}</p> : null}
         {error ? <p className="msg msg--error">{error}</p> : null}
 
         {!loading && !bookings.length ? <p className="muted">No bookings yet.</p> : null}
+
+        {!loading && bookings.length > 0 ? (
+          <div className="user-resource-filter-bar">
+            <select
+              className="input user-filter-control"
+              value={sortMode}
+              onChange={(event) => setSortMode(event.target.value)}
+            >
+              <option value="DATE">Sort: Date</option>
+              <option value="NAME">Sort: Resource Name</option>
+              <option value="STATUS">Sort: Status</option>
+            </select>
+            <select
+              className="input user-filter-control"
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+            >
+              <option value="ALL">All Categories</option>
+              <option value="LECTURE_HALL">Lecture Hall</option>
+              <option value="MEETING_ROOM">Meeting Room</option>
+              <option value="EQUIPMENT">Equipment</option>
+              <option value="LAB">Lab</option>
+            </select>
+            <select
+              className="input user-filter-control"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+            <input
+              className="input user-filter-control user-filter-control--search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search resource or location"
+            />
+          </div>
+        ) : null}
 
         <div className="resource-table-wrap">
           <table className="resource-table">
@@ -187,7 +272,7 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
               </tr>
             </thead>
             <tbody>
-              {bookings.map((booking) => (
+              {visibleBookings.map((booking) => (
                 <tr key={booking.id}>
                   <td>
                     {booking.resourceName}

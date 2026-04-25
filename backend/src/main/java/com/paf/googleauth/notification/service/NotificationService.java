@@ -96,6 +96,47 @@ public class NotificationService {
                 "A new comment was added to your ticket for " + resourceName + ".", "COMMENT", "ticket", ticketId));
     }
 
+    public NotificationResponse notifyTicketCreated(String recipientEmail, String ticketId, String resourceName) {
+        return create(new CreateNotificationRequest(recipientEmail, "Incident ticket submitted",
+                "Your incident ticket for " + resourceName + " has been received and is now OPEN.", "TICKET", "ticket", ticketId));
+    }
+
+    public NotificationResponse notifyResourceStatusChange(String recipientEmail, String resourceId,
+            String resourceName, String newStatus) {
+        String normalizedStatus = newStatus == null ? "" : newStatus.trim().toUpperCase();
+        String title = "OUT_OF_SERVICE".equals(normalizedStatus)
+                ? "Resource unavailable: " + resourceName
+                : "Resource available: " + resourceName;
+        String message = "OUT_OF_SERVICE".equals(normalizedStatus)
+                ? resourceName + " is now out of service. Your upcoming bookings may be affected."
+                : resourceName + " is now active and available for booking.";
+        return create(new CreateNotificationRequest(recipientEmail, title, message, "RESOURCE", "resource", resourceId));
+    }
+
+    public NotificationResponse notifyResourceDeleted(String recipientEmail, String resourceId, String resourceName) {
+        return create(new CreateNotificationRequest(recipientEmail, "Resource removed: " + resourceName,
+                resourceName + " has been removed from the catalog. Your upcoming bookings may be affected.",
+                "RESOURCE", "resource", resourceId));
+    }
+
+    public NotificationResponse notifyResourceCreated(String adminEmail, String resourceId, String resourceName, String category) {
+        return create(new CreateNotificationRequest(adminEmail, "Resource created: " + resourceName,
+                "New " + category + " resource \"" + resourceName + "\" has been added to the catalog.",
+                "RESOURCE", "resource", resourceId));
+    }
+
+    public NotificationResponse notifyResourceUpdated(String adminEmail, String resourceId, String resourceName) {
+        return create(new CreateNotificationRequest(adminEmail, "Resource updated: " + resourceName,
+                "Resource \"" + resourceName + "\" has been updated in the catalog.",
+                "RESOURCE", "resource", resourceId));
+    }
+
+    public NotificationResponse notifyResourceDeletedAdmin(String adminEmail, String resourceId, String resourceName) {
+        return create(new CreateNotificationRequest(adminEmail, "Resource deleted: " + resourceName,
+                "Resource \"" + resourceName + "\" has been permanently removed from the catalog.",
+                "RESOURCE", "resource", resourceId));
+    }
+
     private NotificationResponse toResponse(Notification notification) {
         return new NotificationResponse(
                 notification.getId(),
