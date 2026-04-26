@@ -22,9 +22,7 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
   const avatarUrl = user?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=111111&color=fff`;
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [editingId, setEditingId] = useState('');
+      const [editingId, setEditingId] = useState('');
   const [incidentsByBooking, setIncidentsByBooking] = useState({});
   const [form, setForm] = useState({ bookingDate: '', startTime: '', endTime: '', purpose: '', expectedAttendees: '', linkedRoomApprovalCode: '' });
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -37,7 +35,6 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
       return;
     }
     setLoading(true);
-    setError('');
     try {
       const data = await listMyBookings(user.email);
       setBookings(data);
@@ -54,8 +51,7 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
       }
       setIncidentsByBooking(incidentsMap);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load bookings');
-    } finally {
+          } finally {
       setLoading(false);
     }
   };
@@ -101,14 +97,11 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
 
   const startEdit = (booking) => {
     if (booking.status !== 'PENDING' || booking.systemGenerated) {
-      setError('Only pending bookings can be edited');
-      return;
+            return;
     }
     setEditingId(booking.id);
     setForm(createBookingEditForm(booking));
-    setMessage('');
-    setError('');
-  };
+    };
 
   const submitEdit = async (event) => {
     event.preventDefault();
@@ -117,12 +110,8 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
     }
 
     if (form.bookingDate && form.bookingDate < minDate) {
-      setError('Booking date cannot be in the past');
-      return;
+            return;
     }
-
-    setError('');
-    setMessage('');
 
     try {
       const result = await updateMyBooking(editable.id, user.email, {
@@ -134,18 +123,14 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
         linkedRoomApprovalCode: form.linkedRoomApprovalCode,
       });
       if (!result.success) {
-        setError(result.message || 'Unable to update booking');
-        showToast(result.message || 'Unable to update booking', 'error', 'Booking update failed');
+                showToast(result.message || 'Unable to update booking', 'error', 'Booking update failed');
         return;
       }
-      setMessage(result.message || 'Booking updated');
-      showToast(result.message || 'Booking updated', 'success', 'Booking updated');
+            showToast(result.message || 'Booking updated', 'success', 'Booking updated');
       setEditingId('');
       await load();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Update failed';
-      setError(errorMessage);
-      showToast(errorMessage, 'error', 'Booking update failed');
+      showToast(err instanceof Error ? err.message : 'Update failed', 'error', 'Booking update failed');
     }
   };
 
@@ -160,13 +145,10 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
       onConfirm: async () => {
         try {
           await deleteMyBooking(bookingId, user.email);
-          setMessage('Booking deleted');
-          showToast('Booking deleted successfully', 'success', 'Booking deleted');
+                    showToast('Booking deleted successfully', 'success', 'Booking deleted');
           await load();
         } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'Delete failed';
-          setError(errorMessage);
-          showToast(errorMessage, 'error', 'Delete failed');
+          showToast(err instanceof Error ? err.message : 'Delete failed', 'error', 'Delete failed');
         }
       },
     });
@@ -208,9 +190,6 @@ export default function UserBookingsPage({ user, navigate, onLogout }) {
         </section>
 
         {loading ? <p className="muted">Loading bookings...</p> : null}
-        {message ? <p className="msg msg--success">{message}</p> : null}
-        {error ? <p className="msg msg--error">{error}</p> : null}
-
         {!loading && !bookings.length ? <p className="muted">No bookings yet.</p> : null}
 
         {!loading && bookings.length > 0 ? (

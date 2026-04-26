@@ -75,12 +75,15 @@ public class BookingService {
             bookingRepository.save(linkedBooking);
         }
 
-        notifyRequesterOfBookingChange(
+        // Notify user
+        notificationService.notifyBookingCreated(
                 booking.getRequesterEmail(),
-                "Booking request submitted",
-                "Your booking for " + booking.getResourceName() + " is pending approval.",
                 booking.getId(),
-                booking.getResourceName());
+                booking.getResourceName(),
+                booking.getBookingDate().toString());
+
+        // Notify admin (you can configure a specific admin email or broadcast to all admins)
+        // For now, we'll skip admin notification here as it would require admin email configuration
 
         return new BookingRequestResult(true, "Booking request submitted. Current status: Pending.",
                 toResponse(booking), List.of());
@@ -136,10 +139,9 @@ public class BookingService {
 
         syncLinkedBooking(booking);
 
-        notifyRequesterOfBookingChange(
+        // Notify user
+        notificationService.notifyBookingUpdated(
                 booking.getRequesterEmail(),
-                "Booking updated",
-                "Your booking for " + booking.getResourceName() + " was updated.",
                 booking.getId(),
                 booking.getResourceName());
 
@@ -154,18 +156,17 @@ public class BookingService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Linked room bookings are managed automatically");
         }
 
+        String resourceName = booking.getResourceName();
         bookingRepository.delete(booking);
         List<BookingRecord> linkedBookings = bookingRepository.findAllByParentBookingId(id);
         if (!linkedBookings.isEmpty()) {
             bookingRepository.deleteAll(linkedBookings);
         }
 
-        notifyRequesterOfBookingChange(
-                booking.getRequesterEmail(),
-                "Booking deleted",
-                "Your booking for " + booking.getResourceName() + " was deleted.",
-                booking.getId(),
-                booking.getResourceName());
+        // Notify user
+        notificationService.notifyBookingDeleted(
+                requesterEmail,
+                resourceName);
     }
 
     public List<BookingResponse> listAdminBookings(ResourceCategory category, BookingStatus status, String search) {
@@ -180,7 +181,7 @@ public class BookingService {
                 .toList();
     }
 
-    public BookingResponse updateBookingStatus(String id, BookingStatusUpdateRequest request) {
+    public BookingResponse updateBookingStatus(String id, String adminEmail, BookingStatusUpdateRequest request) {
         BookingRecord booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
         BookingStatus previousStatus = booking.getStatus();
@@ -213,11 +214,30 @@ public class BookingService {
         }
 
         if (previousStatus != request.status() && !booking.isSystemGenerated()) {
+            // Notify user
             notificationService.notifyBookingStatus(
                     booking.getRequesterEmail(),
                     request.status().name(),
                     booking.getId(),
                     booking.getResourceName());
+            
+            // Notify admin (only if adminEmail is provided)
+            if (adminEmail != null && !adminEmail.trim().isEmpty()) {
+                System.out.println("DEBUG: Notifying admin: " + adminEmail + " for booking status: " + request.status());
+                if (request.status() == BookingStatus.APPROVED) {
+                    notificationService.notifyAdminBookingApproved(
+                            adminEmail,
+                            booking.getId(),
+                            booking.getResourceName());
+                } else if (request.status() == BookingStatus.REJECTED) {
+                    notificationService.notifyAdminBookingRejected(
+                            adminEmail,
+                            booking.getId(),
+                            booking.getResourceName());
+                }
+            } else {
+                System.out.println("DEBUG: Admin email is empty, skipping admin notification");
+            }
         }
 
         return toResponse(booking);

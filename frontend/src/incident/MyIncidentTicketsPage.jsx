@@ -17,8 +17,6 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
   const avatarUrl = user?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=111111&color=fff`;
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [commentTextByTicket, setCommentTextByTicket] = useState({});
   const [editingComment, setEditingComment] = useState({ ticketId: '', commentId: '', text: '' });
   const [editingTicketId, setEditingTicketId] = useState('');
@@ -39,12 +37,11 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
       return;
     }
     setLoading(true);
-    setError('');
     try {
       const data = await listMyIncidentTickets(user.email);
       setTickets(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load tickets');
+      showToast(err instanceof Error ? err.message : 'Failed to load tickets', 'error', 'Load failed');
     } finally {
       setLoading(false);
     }
@@ -116,7 +113,6 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
       await load();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Comment failed';
-      setError(errorMessage);
       showToast(errorMessage, 'error', 'Comment failed');
     }
   };
@@ -133,7 +129,6 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
       await load();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unable to update comment';
-      setError(errorMessage);
       showToast(errorMessage, 'error', 'Comment update failed');
     }
   };
@@ -148,7 +143,6 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
       await load();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unable to delete comment';
-      setError(errorMessage);
       showToast(errorMessage, 'error', 'Comment delete failed');
     }
   };
@@ -162,8 +156,6 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
       preferredContact: ticket.preferredContact || '',
       attachments: ticket.attachments || [],
     });
-    setError('');
-    setMessage('');
   };
 
   const cancelTicketEdit = () => {
@@ -184,13 +176,11 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
 
     try {
       await updateMyIncidentTicket(ticketId, user.email, ticketEditForm);
-      setMessage('Ticket updated successfully');
       showToast('Ticket updated successfully', 'success', 'Ticket updated');
       cancelTicketEdit();
       await load();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unable to update ticket';
-      setError(errorMessage);
       showToast(errorMessage, 'error', 'Ticket update failed');
     }
   };
@@ -206,12 +196,10 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
       onConfirm: async () => {
         try {
           await deleteMyIncidentTicket(ticketId, user.email);
-          setMessage('Ticket deleted successfully');
           showToast('Ticket deleted successfully', 'success', 'Ticket deleted');
           await load();
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Unable to delete ticket';
-          setError(errorMessage);
           showToast(errorMessage, 'error', 'Delete failed');
         }
       },
@@ -269,8 +257,6 @@ export default function MyIncidentTicketsPage({ user, navigate, onLogout }) {
           <p className="subtitle">Monitor ticket progress, update details, and communicate through comments.</p>
         </section>
         {loading ? <p className="muted">Loading tickets...</p> : null}
-        {message ? <p className="msg msg--success">{message}</p> : null}
-        {error ? <p className="msg msg--error">{error}</p> : null}
 
         {!loading && !tickets.length ? <p className="muted">No tickets yet.</p> : null}
 

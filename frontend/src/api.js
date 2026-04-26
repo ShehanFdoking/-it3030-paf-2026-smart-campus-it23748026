@@ -157,8 +157,8 @@ export async function listAdminBookings({ category, status, search } = {}) {
   return parseApiResponse(response);
 }
 
-export async function updateBookingStatus(id, status, adminNote = '') {
-  const response = await fetch(`${API_BASE_URL}/api/admin/bookings/${id}/status`, {
+export async function updateBookingStatus(id, adminEmail, status, adminNote = '') {
+  const response = await fetch(`${API_BASE_URL}/api/admin/bookings/${id}/status?adminEmail=${encodeURIComponent(adminEmail)}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

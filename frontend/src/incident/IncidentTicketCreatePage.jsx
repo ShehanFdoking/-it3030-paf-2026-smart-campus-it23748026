@@ -12,8 +12,7 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [form, setForm] = useState({
+    const [form, setForm] = useState({
     category: INCIDENT_CATEGORIES[0],
     description: '',
     priority: 'MEDIUM',
@@ -37,13 +36,11 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      setError('');
       try {
         const data = await getResource(resourceId);
         setResource(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load resource');
-      } finally {
+              } finally {
         setLoading(false);
       }
     };
@@ -65,19 +62,16 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
     }
 
     if (mergedFiles.length > 3) {
-      setError('You can attach up to 3 images only');
-      event.target.value = '';
+            event.target.value = '';
       return;
     }
 
     const invalid = mergedFiles.some((file) => !file.type.startsWith('image/'));
     if (invalid) {
-      setError('Only image attachments are allowed');
-      event.target.value = '';
+            event.target.value = '';
       return;
     }
 
-    setError('');
     setForm((current) => ({ ...current, files: mergedFiles }));
     event.target.value = '';
   };
@@ -86,13 +80,10 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
     event.preventDefault();
 
     if (!user?.email || !user?.name) {
-      setError('Please login again');
-      return;
+            return;
     }
 
     setSubmitting(true);
-    setError('');
-
     try {
       const attachments = await Promise.all(form.files.map(fileToDataUrl));
       await createIncidentTicket({
@@ -110,8 +101,7 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
       navigate('/my-tickets');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create ticket';
-      setError(errorMessage);
-      showToast(errorMessage, 'error', 'Ticket creation failed');
+            showToast(errorMessage, 'error', 'Ticket creation failed');
     } finally {
       setSubmitting(false);
     }
@@ -242,10 +232,7 @@ export default function IncidentTicketCreatePage({ resourceId, bookingId, user, 
             <button className="btn btn--ghost" type="button" onClick={() => navigate('/my-bookings')}>Back</button>
           </div>
           </form>
-        </div>
-
-        {error ? <p className="msg msg--error">{error}</p> : null}
-      </section>
+        </div>      </section>
     </main>
   );
 }

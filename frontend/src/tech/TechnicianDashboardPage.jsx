@@ -7,19 +7,15 @@ import { showToast } from '../notification/notificationBus';
 export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [resolutionByTicket, setResolutionByTicket] = useState({});
 
   const loadInProgressTickets = async () => {
     setLoading(true);
-    setError('');
-    setMessage('');
     try {
       const data = await listAdminIncidentTickets({ status: 'IN_PROGRESS' });
       setTickets(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load in-progress tickets');
+      showToast(err instanceof Error ? err.message : 'Failed to load in-progress tickets', 'error', 'Load failed');
     } finally {
       setLoading(false);
     }
@@ -45,7 +41,7 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
   const markAsResolved = async (ticketId) => {
     const notes = (resolutionByTicket[ticketId] || '').trim();
     if (!notes) {
-      setError('Please add resolution notes before marking the ticket as resolved.');
+      showToast('Please add resolution notes before marking the ticket as resolved', 'error', 'Resolution notes required');
       return;
     }
 
@@ -56,13 +52,11 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
       await updateIncidentTicket(ticketId, {
         resolutionNotes: notes,
       });
-      setMessage('Ticket resolved successfully.');
       setResolutionByTicket((current) => ({ ...current, [ticketId]: '' }));
       showToast('Ticket resolved successfully', 'success', 'Ticket updated');
       await loadInProgressTickets();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to resolve ticket';
-      setError(errorMessage);
       showToast(errorMessage, 'error', 'Resolve failed');
     }
   };
@@ -120,8 +114,6 @@ export default function TechnicianDashboardPage({ navigate, onLogout, user }) {
         </div>
 
         {loading ? <p className="muted">Loading in-progress tickets...</p> : null}
-        {message ? <p className="msg msg--success">{message}</p> : null}
-        {error ? <p className="msg msg--error">{error}</p> : null}
 
         {!loading && !tickets.length ? <p className="muted">No in-progress tickets at the moment. Check back soon!</p> : null}
 

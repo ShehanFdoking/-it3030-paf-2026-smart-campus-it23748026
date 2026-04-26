@@ -16,8 +16,7 @@ export default function ResourceCategoryPage({ categorySlug, adminUser, navigate
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
+  
   const visibleResources = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     let filtered = resources;
@@ -59,14 +58,11 @@ export default function ResourceCategoryPage({ categorySlug, adminUser, navigate
 
   const loadResources = async () => {
     setLoading(true);
-    setError('');
-
     try {
       const data = await listResources(meta.enumValue, sortMode === 'LOCATION');
       setResources(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load resources');
-    } finally {
+          } finally {
       setLoading(false);
     }
   };
@@ -77,8 +73,6 @@ export default function ResourceCategoryPage({ categorySlug, adminUser, navigate
 
   const handleCreateOrUpdate = async (payload) => {
     setSaving(true);
-    setError('');
-
     try {
       if (selectedResource) {
         await updateResource(selectedResource.id, payload, adminEmail);
@@ -93,8 +87,7 @@ export default function ResourceCategoryPage({ categorySlug, adminUser, navigate
       refreshNotifications();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unable to save resource';
-      setError(errorMessage);
-      showToast(errorMessage, 'error', 'Save failed');
+            showToast(errorMessage, 'error', 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -107,8 +100,6 @@ export default function ResourceCategoryPage({ categorySlug, adminUser, navigate
       confirmLabel: 'Delete',
       onConfirm: async () => {
         setSaving(true);
-        setError('');
-
         try {
           await deleteResource(resource.id, adminEmail);
           showToast(`${resource.name} deleted successfully`, 'success', 'Resource deleted');
@@ -116,8 +107,7 @@ export default function ResourceCategoryPage({ categorySlug, adminUser, navigate
           refreshNotifications();
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Unable to delete resource';
-          setError(errorMessage);
-          showToast(errorMessage, 'error', 'Delete failed');
+                    showToast(errorMessage, 'error', 'Delete failed');
         } finally {
           setSaving(false);
         }
@@ -128,14 +118,12 @@ export default function ResourceCategoryPage({ categorySlug, adminUser, navigate
   const handleEdit = (resource) => {
     setSelectedResource(resource);
     setShowForm(true);
-    setError('');
-  };
+    };
 
   const handleNew = () => {
     setSelectedResource(null);
     setShowForm(true);
-    setError('');
-  };
+    };
 
   return (
     <main className="scene scene--admin">
@@ -214,10 +202,7 @@ export default function ResourceCategoryPage({ categorySlug, adminUser, navigate
               Add New {meta.itemLabel}
             </button>
           </div>
-        </div>
-
-        {error ? <p className="msg msg--error">{error}</p> : null}
-        {loading ? <p className="muted">Loading resources...</p> : null}
+        </div>        {loading ? <p className="muted">Loading resources...</p> : null}
 
         {showForm ? (
           <div className="resource-form-shell">

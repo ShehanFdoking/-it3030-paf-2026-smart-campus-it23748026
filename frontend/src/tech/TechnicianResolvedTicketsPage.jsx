@@ -6,11 +6,9 @@ import { openNotifications } from '../notification/notificationBus';
 export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user }) {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
+  
   const loadResolvedTickets = async () => {
     setLoading(true);
-    setError('');
     try {
       const [resolvedTickets, closedTickets] = await Promise.all([
         listAdminIncidentTickets({ status: 'RESOLVED' }),
@@ -36,8 +34,7 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
 
       setTickets(uniqueTickets);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load resolved tickets');
-    } finally {
+          } finally {
       setLoading(false);
     }
   };
@@ -106,8 +103,6 @@ export default function TechnicianResolvedTicketsPage({ navigate, onLogout, user
         </div>
 
         {loading ? <p className="muted">Loading resolved tickets...</p> : null}
-        {error ? <p className="msg msg--error">{error}</p> : null}
-
         {!loading && !tickets.length ? <p className="muted">No resolved tickets found yet.</p> : null}
 
         {tickets.map((ticket) => {

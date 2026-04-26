@@ -20,21 +20,17 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
+      const [suggestions, setSuggestions] = useState([]);
   const [form, setForm] = useState(createBookingRequestForm);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      setError('');
       try {
         const data = await getResource(resourceId);
         setResource(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load resource');
-      } finally {
+              } finally {
         setLoading(false);
       }
     };
@@ -50,24 +46,19 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
     event.preventDefault();
 
     if (!user?.email || !user?.name) {
-      setError('Please login again to continue booking');
-      return;
+            return;
     }
 
     if (form.bookingDate && form.bookingDate < minDate) {
-      setError('Booking date cannot be in the past');
-      return;
+            return;
     }
 
     const attendees = toNullableNumber(form.expectedAttendees);
     if (meta.enumValue !== 'EQUIPMENT' && attendees != null && resource?.capacity != null && attendees > resource.capacity) {
-      setError('Expected attendees cannot exceed resource capacity');
-      return;
+            return;
     }
 
     setSubmitting(true);
-    setError('');
-    setMessage('');
     setSuggestions([]);
 
     try {
@@ -89,14 +80,11 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
         navigate('/my-bookings');
         return;
       } else {
-        setError(result.message || 'Unable to create booking');
-        setSuggestions(result.suggestions || []);
+                setSuggestions(result.suggestions || []);
         showToast(result.message || 'Unable to create booking', 'error', 'Booking failed');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Booking request failed';
-      setError(errorMessage);
-      showToast(errorMessage, 'error', 'Booking failed');
+      showToast(err instanceof Error ? err.message : 'Booking request failed', 'error', 'Booking failed');
     } finally {
       setSubmitting(false);
     }
@@ -197,10 +185,6 @@ export default function UserBookingRequestPage({ categorySlug, resourceId, user,
             </div>
           </form>
         </div>
-
-        {message ? <p className="msg msg--success">{message}</p> : null}
-        {error ? <p className="msg msg--error">{error}</p> : null}
-
         {suggestions.length ? (
           <section className="user-suggestion-box">
             <h3>Suggested alternatives</h3>

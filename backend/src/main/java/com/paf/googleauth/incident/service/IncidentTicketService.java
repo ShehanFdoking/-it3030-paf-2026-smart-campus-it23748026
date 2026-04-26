@@ -64,6 +64,7 @@ public class IncidentTicketService {
 
         IncidentTicket saved = incidentTicketRepository.save(ticket);
 
+        // Notify the user who created the ticket
         notificationService.notifyTicketCreated(
                 saved.getReporterEmail(),
                 saved.getId(),
@@ -137,6 +138,7 @@ public class IncidentTicketService {
         IncidentTicket ticket = incidentTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
         TicketStatus previousStatus = ticket.getStatus();
+        String previousTechnicianEmail = ticket.getAssignedStaffEmail();
 
         boolean hasAssignedStaffUpdate = !isBlank(request.assignedStaffEmail())
                 || !isBlank(request.assignedStaffName());
@@ -180,12 +182,41 @@ public class IncidentTicketService {
         }
 
         ticket.setUpdatedAt(Instant.now());
-        IncidentTicketResponse response = toResponse(incidentTicketRepository.save(ticket));
+        IncidentTicket saved = incidentTicketRepository.save(ticket);
+        IncidentTicketResponse response = toResponse(saved);
 
+        // Notify user if status changed
         if (previousStatus != ticket.getStatus()) {
             notificationService.notifyTicketStatus(
                     ticket.getReporterEmail(),
                     ticket.getStatus().name(),
+                    ticket.getId(),
+                    ticket.getResourceName());
+            
+            // Notify user about ticket updates
+            notificationService.notifyUserTicketUpdated(
+                    ticket.getReporterEmail(),
+                    ticket.getId(),
+                    ticket.getResourceName(),
+                    ticket.getStatus().name());
+        }
+
+        // Notify technician if they were assigned
+        if (!isBlank(ticket.getAssignedStaffEmail()) && 
+            !ticket.getAssignedStaffEmail().equalsIgnoreCase(safe(previousTechnicianEmail))) {
+            System.out.println("DEBUG: Notifying technician assigned: " + ticket.getAssignedStaffEmail());
+            notificationService.notifyTechnicianAssigned(
+                    ticket.getAssignedStaffEmail(),
+                    ticket.getId(),
+                    ticket.getResourceName());
+        }
+
+        // Notify previous technician if they were unassigned
+        if (!isBlank(previousTechnicianEmail) && 
+            !previousTechnicianEmail.equalsIgnoreCase(safe(ticket.getAssignedStaffEmail()))) {
+            System.out.println("DEBUG: Notifying technician unassigned: " + previousTechnicianEmail);
+            notificationService.notifyTechnicianUnassigned(
+                    previousTechnicianEmail,
                     ticket.getId(),
                     ticket.getResourceName());
         }
@@ -213,13 +244,24 @@ public class IncidentTicketService {
 
         ticket.getComments().add(comment);
         ticket.setUpdatedAt(Instant.now());
-        IncidentTicketResponse response = toResponse(incidentTicketRepository.save(ticket));
+        IncidentTicket saved = incidentTicketRepository.save(ticket);
+        IncidentTicketResponse response = toResponse(saved);
 
+        // Notify user if comment is from admin or technician
         if (request.authorRole() != CommentRole.USER) {
             notificationService.notifyTicketComment(
                     ticket.getReporterEmail(),
                     ticket.getId(),
                     ticket.getResourceName());
+        }
+
+        // Notify technician if comment is from user or admin (and technician is assigned)
+        if (request.authorRole() != CommentRole.STAFF && !isBlank(ticket.getAssignedStaffEmail())) {
+            notificationService.notifyTechnicianComment(
+                    ticket.getAssignedStaffEmail(),
+                    ticket.getId(),
+                    ticket.getResourceName(),
+                    request.authorName().trim());
         }
 
         return response;

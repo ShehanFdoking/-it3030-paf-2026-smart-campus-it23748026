@@ -6,23 +6,20 @@ import { getLocationLabel, formatSublocationLabel } from '../catalog/resourceCon
 import { openNotifications } from '../notification/notificationBus';
 import { requestConfirmation, showToast } from '../notification/notificationBus';
 
-export default function AdminBookingsPage({ navigate, onLogout }) {
+export default function AdminBookingsPage({ adminUser, navigate, onLogout }) {
   const [bookings, setBookings] = useState([]);
   const [category, setCategory] = useState('ALL');
   const [status, setStatus] = useState('ALL');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const load = async () => {
     setLoading(true);
-    setError('');
     try {
       const data = await listAdminBookings({ category, status, search });
       setBookings(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load bookings');
+      showToast(err instanceof Error ? err.message : 'Failed to load bookings', 'error', 'Load failed');
     } finally {
       setLoading(false);
     }
@@ -57,16 +54,12 @@ export default function AdminBookingsPage({ navigate, onLogout }) {
       message,
       confirmLabel: 'Continue',
       onConfirm: async () => {
-        setError('');
-        setMessage('');
         try {
-          await updateBookingStatus(id, nextStatus);
-          setMessage(`Booking changed to ${nextStatus}`);
+          await updateBookingStatus(id, adminUser?.email || '', nextStatus);
           showToast(`Booking ${nextStatus.toLowerCase()}`, 'success', 'Booking updated');
           await load();
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Status update failed';
-          setError(errorMessage);
           showToast(errorMessage, 'error', 'Booking update failed');
         }
       },
@@ -204,8 +197,6 @@ export default function AdminBookingsPage({ navigate, onLogout }) {
         </div>
 
         {loading ? <p className="muted">Loading bookings...</p> : null}
-        {message ? <p className="msg msg--success">{message}</p> : null}
-        {error ? <p className="msg msg--error">{error}</p> : null}
 
         {renderGroup('Lecture Hall Bookings', grouped.LECTURE_HALL)}
         {renderGroup('Meeting Room Bookings', grouped.MEETING_ROOM)}

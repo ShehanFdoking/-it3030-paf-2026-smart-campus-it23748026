@@ -44,8 +44,7 @@ export default function App() {
       return null;
     }
   });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
   const [route, setRoute] = useState(getRoute(window.location.pathname));
   const [adminLoginForm, setAdminLoginForm] = useState({
     email: '',
@@ -56,8 +55,7 @@ export default function App() {
     newPassword: '',
     confirmPassword: '',
   });
-  const [adminMessage, setAdminMessage] = useState('');
-  const [adminSummary, setAdminSummary] = useState({
+    const [adminSummary, setAdminSummary] = useState({
     totalResources: 0,
     totalBookings: 0,
     totalIncidents: 0,
@@ -236,7 +234,7 @@ export default function App() {
     setAdminActionBusy(`${bookingId}:${nextStatus}`);
 
     try {
-      await updateBookingStatus(bookingId, nextStatus);
+      await updateBookingStatus(bookingId, adminUser?.email || '', nextStatus);
       const [bookings, incidents] = await Promise.all([
         listAdminBookings({}),
         listAdminIncidentTickets({}),
@@ -261,13 +259,10 @@ export default function App() {
 
   const handleSuccess = async (credentialResponse) => {
     if (!credentialResponse.credential) {
-      setError('No credential returned from Google');
-      return;
+            return;
     }
 
     setLoading(true);
-    setError('');
-
     try {
       const data = await loginWithGoogle(credentialResponse.credential);
       setGoogleUser(data);
@@ -276,8 +271,7 @@ export default function App() {
       window.localStorage.removeItem(ADMIN_SESSION_KEY);
       navigate('/home');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Google login failed');
-      setGoogleUser(null);
+            setGoogleUser(null);
       window.localStorage.removeItem(GOOGLE_SESSION_KEY);
     } finally {
       setLoading(false);
@@ -287,9 +281,6 @@ export default function App() {
   const handleAdminLogin = async (event) => {
     event.preventDefault();
     setLoading(true);
-    setError('');
-    setAdminMessage('');
-
     try {
       const admin = await loginAdmin(adminLoginForm.email, adminLoginForm.password);
       setAdminUser(admin);
@@ -302,8 +293,7 @@ export default function App() {
         navigate('/admin/dashboard');
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Login failed');
-      setAdminUser(null);
+            setAdminUser(null);
       window.localStorage.removeItem(ADMIN_SESSION_KEY);
     } finally {
       setLoading(false);
@@ -314,26 +304,19 @@ export default function App() {
     event.preventDefault();
 
     if (!adminUser) {
-      setError('Admin session not found. Please log in again.');
-      return;
+            return;
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('New password and confirm password do not match');
-      return;
+            return;
     }
 
     setLoading(true);
-    setError('');
-    setAdminMessage('');
-
     try {
       const result = await changeAdminPassword(adminUser.email, passwordForm.currentPassword, passwordForm.newPassword);
-      setAdminMessage(result.message || 'Password changed successfully');
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Password update failed');
-    } finally {
+          } finally {
       setLoading(false);
     }
   };
@@ -343,8 +326,6 @@ export default function App() {
     window.localStorage.removeItem(GOOGLE_SESSION_KEY);
     setAdminUser(null);
     window.localStorage.removeItem(ADMIN_SESSION_KEY);
-    setError('');
-    setAdminMessage('');
     setPasswordForm({ currentPassword: '', newPassword: '' });
     navigate('/');
   };
@@ -598,12 +579,7 @@ export default function App() {
                 <p className="msg msg--error">Admin session not found. Please log in again.</p>
               ) : (
                 <div className="admin-profile-content">
-                  <h2 className="admin-profile-section-title">Change Password</h2>
-
-                  {adminMessage ? <p className="msg msg--success">{adminMessage}</p> : null}
-                  {error ? <p className="msg msg--error">{error}</p> : null}
-
-                  <form onSubmit={handleAdminPasswordChange} className="admin-profile-form">
+                  <h2 className="admin-profile-section-title">Change Password</h2>                  <form onSubmit={handleAdminPasswordChange} className="admin-profile-form">
                     <div className="form-field">
                       <label className="field-label" htmlFor="current-admin-password">
                         Current Password<span className="required-mark">*</span>
@@ -944,7 +920,7 @@ export default function App() {
   }
 
   if (route === '/admin/bookings') {
-    return <AdminBookingsPage navigate={navigate} onLogout={handleLogout} />;
+    return <AdminBookingsPage adminUser={adminUser} navigate={navigate} onLogout={handleLogout} />;
   }
 
   if (route === '/admin/incidents') {
@@ -1037,9 +1013,7 @@ export default function App() {
             />
           </div>
 
-          {loading ? <p className="muted">Processing login...</p> : null}
-          {error ? <p className="msg msg--error">{error}</p> : null}
-        </div>
+          {loading ? <p className="muted">Processing login...</p> : null}        </div>
 
       </section>
     </main>

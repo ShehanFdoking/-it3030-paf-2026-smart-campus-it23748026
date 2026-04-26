@@ -137,6 +137,88 @@ public class NotificationService {
                 "RESOURCE", "resource", resourceId));
     }
 
+    // User booking notifications
+    public NotificationResponse notifyBookingCreated(String recipientEmail, String bookingId, String resourceName, String bookingDate) {
+        return create(new CreateNotificationRequest(recipientEmail, "Booking request submitted",
+                "Your booking request for " + resourceName + " on " + bookingDate + " has been submitted and is pending approval.",
+                "BOOKING", "booking", bookingId));
+    }
+
+    public NotificationResponse notifyBookingUpdated(String recipientEmail, String bookingId, String resourceName) {
+        return create(new CreateNotificationRequest(recipientEmail, "Booking updated",
+                "Your booking for " + resourceName + " has been updated successfully.",
+                "BOOKING", "booking", bookingId));
+    }
+
+    public NotificationResponse notifyBookingDeleted(String recipientEmail, String resourceName) {
+        return create(new CreateNotificationRequest(recipientEmail, "Booking cancelled",
+                "Your booking for " + resourceName + " has been cancelled.",
+                "BOOKING", "booking", null));
+    }
+
+    // Admin notifications for booking actions
+    public NotificationResponse notifyAdminNewBooking(String adminEmail, String bookingId, String resourceName, String userName) {
+        return create(new CreateNotificationRequest(adminEmail, "New booking request",
+                userName + " has requested to book " + resourceName + ". Approval needed.",
+                "BOOKING", "booking", bookingId));
+    }
+
+    public NotificationResponse notifyAdminBookingApproved(String adminEmail, String bookingId, String resourceName) {
+        return create(new CreateNotificationRequest(adminEmail, "Booking approved",
+                "You approved the booking for " + resourceName + ".",
+                "BOOKING", "booking", bookingId));
+    }
+
+    public NotificationResponse notifyAdminBookingRejected(String adminEmail, String bookingId, String resourceName) {
+        return create(new CreateNotificationRequest(adminEmail, "Booking rejected",
+                "You rejected the booking for " + resourceName + ".",
+                "BOOKING", "booking", bookingId));
+    }
+
+    // Technician notifications
+    public NotificationResponse notifyTechnicianAssigned(String technicianEmail, String ticketId, String resourceName) {
+        return create(new CreateNotificationRequest(technicianEmail, "Ticket assigned to you",
+                "You have been assigned to handle the incident ticket for " + resourceName + ".",
+                "TICKET", "ticket", ticketId));
+    }
+
+    public NotificationResponse notifyTechnicianUnassigned(String technicianEmail, String ticketId, String resourceName) {
+        return create(new CreateNotificationRequest(technicianEmail, "Ticket unassigned",
+                "You have been unassigned from the incident ticket for " + resourceName + ".",
+                "TICKET", "ticket", ticketId));
+    }
+
+    public NotificationResponse notifyAdminTicketCreated(String adminEmail, String ticketId, String resourceName, String reporterName) {
+        return create(new CreateNotificationRequest(adminEmail, "New incident ticket",
+                reporterName + " reported an incident for " + resourceName + ". Assignment needed.",
+                "TICKET", "ticket", ticketId));
+    }
+
+    public NotificationResponse notifyAdminTicketAssigned(String adminEmail, String ticketId, String resourceName, String technicianName) {
+        return create(new CreateNotificationRequest(adminEmail, "Ticket assigned",
+                "Incident ticket for " + resourceName + " has been assigned to " + technicianName + ".",
+                "TICKET", "ticket", ticketId));
+    }
+
+    public NotificationResponse notifyUserTicketUpdated(String userEmail, String ticketId, String resourceName, String newStatus) {
+        return create(new CreateNotificationRequest(userEmail, "Ticket status updated",
+                "Your incident ticket for " + resourceName + " status changed to " + newStatus + ".",
+                "TICKET", "ticket", ticketId));
+    }
+
+    // Comment notifications
+    public NotificationResponse notifyAdminComment(String adminEmail, String ticketId, String resourceName, String commenterName) {
+        return create(new CreateNotificationRequest(adminEmail, "New comment on ticket",
+                commenterName + " added a comment to the ticket for " + resourceName + ".",
+                "COMMENT", "ticket", ticketId));
+    }
+
+    public NotificationResponse notifyTechnicianComment(String technicianEmail, String ticketId, String resourceName, String commenterName) {
+        return create(new CreateNotificationRequest(technicianEmail, "New comment on your ticket",
+                commenterName + " added a comment to the ticket for " + resourceName + ".",
+                "COMMENT", "ticket", ticketId));
+    }
+
     private NotificationResponse toResponse(Notification notification) {
         return new NotificationResponse(
                 notification.getId(),

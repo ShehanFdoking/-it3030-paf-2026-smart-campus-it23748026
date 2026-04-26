@@ -19,14 +19,11 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [editorByTicket, setEditorByTicket] = useState({});
   const [staffCommentByTicket, setStaffCommentByTicket] = useState({});
 
   const load = async () => {
     setLoading(true);
-    setError('');
     try {
       const data = await listAdminIncidentTickets({ status: statusFilter, search });
       setTickets(data);
@@ -45,8 +42,7 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
         return next;
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load incident tickets');
-    } finally {
+          } finally {
       setLoading(false);
     }
   };
@@ -58,19 +54,16 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
   const assignTechnician = async (ticketId) => {
     const payload = editorByTicket[ticketId] || createEditor();
     if (!payload.assignedStaffEmail.trim() && !payload.assignedStaffName.trim()) {
-      setError('Provide technician email or name before assigning');
-      return;
+            return;
     }
     try {
       await updateIncidentTicket(ticketId, {
         assignedStaffEmail: payload.assignedStaffEmail,
         assignedStaffName: payload.assignedStaffName,
       });
-      setMessage('Technician assigned. Status moved to IN_PROGRESS automatically.');
-      await load();
+            await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to assign technician');
-    }
+          }
   };
 
   const saveTechnicianUpdate = async (ticketId) => {
@@ -81,11 +74,9 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
         assignedStaffName: payload.assignedStaffName,
         resolutionNotes: payload.resolutionNotes,
       });
-      setMessage('Technician update saved. Status moved to RESOLVED when resolution notes are provided.');
-      await load();
+            await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to save technician update');
-    }
+          }
   };
 
   const closeTicket = async (ticketId) => {
@@ -96,13 +87,10 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
       onConfirm: async () => {
         try {
           await updateIncidentTicket(ticketId, { status: 'CLOSED' });
-          setMessage('Ticket closed successfully');
-          showToast('Ticket closed successfully', 'success', 'Ticket closed');
+                    showToast('Ticket closed successfully', 'success', 'Ticket closed');
           await load();
         } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'Unable to close ticket';
-          setError(errorMessage);
-          showToast(errorMessage, 'error', 'Close failed');
+          showToast(err instanceof Error ? err.message : 'Unable to close ticket', 'error', 'Close failed');
         }
       },
     });
@@ -111,8 +99,7 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
   const rejectTicket = async (ticketId) => {
     const payload = editorByTicket[ticketId] || createEditor();
     if (!payload.rejectionReason.trim()) {
-      setError('Rejection reason is required');
-      return;
+            return;
     }
     requestConfirmation({
       title: 'Reject ticket?',
@@ -124,13 +111,10 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
             status: 'REJECTED',
             rejectionReason: payload.rejectionReason,
           });
-          setMessage('Ticket rejected');
-          showToast('Ticket rejected', 'success', 'Ticket updated');
+                    showToast('Ticket rejected', 'success', 'Ticket updated');
           await load();
         } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'Unable to reject ticket';
-          setError(errorMessage);
-          showToast(errorMessage, 'error', 'Reject failed');
+          showToast(err instanceof Error ? err.message : 'Unable to reject ticket', 'error', 'Reject failed');
         }
       },
     });
@@ -155,8 +139,7 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
       setStaffCommentByTicket((current) => ({ ...current, [ticketId]: '' }));
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to add comment');
-    }
+          }
   };
 
   const totalCount = tickets.length;
@@ -275,9 +258,6 @@ export default function AdminIncidentTicketsPage({ adminUser, navigate, onLogout
         </div>
 
         {loading ? <p className="muted">Loading incident tickets...</p> : null}
-        {message ? <p className="msg msg--success">{message}</p> : null}
-        {error ? <p className="msg msg--error">{error}</p> : null}
-
         {!loading && !tickets.length ? <p className="muted">No incident tickets found for the selected filters.</p> : null}
 
         {tickets.map((ticket) => {
