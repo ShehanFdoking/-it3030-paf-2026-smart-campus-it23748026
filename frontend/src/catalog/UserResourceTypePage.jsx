@@ -12,7 +12,7 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
   const displayName = user?.name || 'Campus User';
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('LOCATION');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [labTypeFilter, setLabTypeFilter] = useState('ALL');
@@ -25,7 +25,7 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
         const data = await listResources(meta.enumValue);
         setResources(data);
       } catch (err) {
-              } finally {
+      } finally {
         setLoading(false);
       }
     };
@@ -177,7 +177,7 @@ export default function UserResourceTypePage({ user, categorySlug, navigate, onL
         </div>
 
         {loading ? <p className="muted">Loading resources...</p> : null}
-        {!loading && !error && locationEntries.length === 0 ? <p className="muted">No resources found.</p> : null}
+        {!loading && locationEntries.length === 0 ? <p className="muted">No resources found.</p> : null}
 
         <div className="user-location-stack">
           {locationEntries.map(([locationKey, locationResources]) => {
